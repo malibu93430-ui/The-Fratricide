@@ -1,14 +1,24 @@
 const SUPABASE_URL = "https://efnqxsxdpanpcyfbwtes.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_m2lOIUxo6FVmufkFPjxpNA_F3XIcg90";
 
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient = null;
+
+// Initialisation sécurisée pour ne jamais bloquer l'interface
+try {
+  if (window.supabase && typeof window.supabase.createClient === 'function') {
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  } else {
+    console.error("SDK Supabase non chargé depuis le CDN.");
+  }
+} catch (e) {
+  console.error("Erreur initialisation Supabase :", e);
+}
 
 let currentFamily = null;
-let currentRole = null; // 'admin' ou child_id
+let currentRole = null;
 let childrenList = [];
 let tasksList = [];
 
-// Tâches types par jour pour initialiser automatiquement les enfants
 const DEFAULT_TASKS_ROTATION = [
   ["Mettre la table", "Vider le lave-vaisselle"],
   ["Débarrasser la table", "Remplir le lave-vaisselle"],
@@ -16,25 +26,26 @@ const DEFAULT_TASKS_ROTATION = [
 ];
 const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
-// Bascule login / register
-function showAuthMode(mode) {
+// Fonction de bascule garantie entre Connexion et Inscription
+function switchAuthMode(mode) {
   const loginForm = document.getElementById('form-login');
   const regForm = document.getElementById('form-register');
   const loginTab = document.getElementById('tab-btn-login');
   const regTab = document.getElementById('tab-btn-register');
   const statusMsg = document.getElementById('auth-status-msg');
+
   if (statusMsg) statusMsg.innerText = '';
 
   if (mode === 'register') {
-    loginForm.style.display = 'none';
-    regForm.style.display = 'block';
-    loginTab.classList.remove('active');
-    regTab.classList.add('active');
+    if (loginForm) loginForm.style.display = 'none';
+    if (regForm) regForm.style.display = 'block';
+    if (loginTab) loginTab.classList.remove('active');
+    if (regTab) regTab.classList.add('active');
   } else {
-    loginForm.style.display = 'block';
-    regForm.style.display = 'none';
-    loginTab.classList.add('active');
-    regTab.classList.remove('active');
+    if (loginForm) loginForm.style.display = 'block';
+    if (regForm) regForm.style.display = 'none';
+    if (loginTab) loginTab.classList.add('active');
+    if (regTab) regTab.classList.remove('active');
   }
 }
 
@@ -43,6 +54,13 @@ async function handleRegister(e) {
   e.preventDefault();
   const statusMsg = document.getElementById('auth-status-msg');
   const submitBtn = document.getElementById('btn-reg-submit');
+
+  if (!supabaseClient) {
+    statusMsg.style.color = '#DC2626';
+    statusMsg.innerText = "Connexion réseau impossible. Vérifiez votre connexion Internet.";
+    return;
+  }
+
   const familyName = document.getElementById('reg-family-name').value.trim();
   const email = document.getElementById('reg-email').value.trim();
   const password = document.getElementById('reg-password').value;
@@ -67,7 +85,7 @@ async function handleRegister(e) {
     checkFamilySetup();
   } catch (err) {
     statusMsg.style.color = '#DC2626';
-    statusMsg.innerText = err.message || "Erreur lors de la création.";
+    statusMsg.innerText = err.message || "Erreur lors de la création du compte.";
   } finally {
     submitBtn.disabled = false;
   }
@@ -78,12 +96,19 @@ async function handleLogin(e) {
   e.preventDefault();
   const statusMsg = document.getElementById('auth-status-msg');
   const submitBtn = document.getElementById('btn-login-submit');
+
+  if (!supabaseClient) {
+    statusMsg.style.color = '#DC2626';
+    statusMsg.innerText = "Connexion réseau impossible. Vérifiez votre connexion Internet.";
+    return;
+  }
+
   const email = document.getElementById('login-email').value.trim();
   const password = document.getElementById('login-password').value;
 
   submitBtn.disabled = true;
   statusMsg.style.color = 'var(--text-muted)';
-  statusMsg.innerText = 'Connexion...';
+  statusMsg.innerText = 'Connexion en cours...';
 
   try {
     const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({ email, password });
@@ -101,13 +126,13 @@ async function handleLogin(e) {
     checkFamilySetup();
   } catch (err) {
     statusMsg.style.color = '#DC2626';
-    statusMsg.innerText = err.message || "Identifiants incorrects.";
+    statusMsg.innerText = err.message || "Email ou mot de passe incorrect.";
   } finally {
     submitBtn.disabled = false;
   }
 }
 
-// 3. Vérification : y a-t-il déjà des enfants configurés ?
+// 3. Vérification enfants configurés
 async function checkFamilySetup() {
   document.getElementById('login-screen').style.display = 'none';
 
@@ -125,7 +150,6 @@ async function checkFamilySetup() {
   }
 }
 
-// 4. Écran de configuration initiale si nouveau compte
 function showSetupScreen() {
   document.getElementById('profile-select-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
@@ -134,7 +158,6 @@ function showSetupScreen() {
 
   const list = document.getElementById('setup-kids-list');
   list.innerHTML = '';
-  // Par défaut : 2 champs d'enfants au départ
   addKidInputRow('Enfant 1');
   addKidInputRow('Enfant 2');
 }
@@ -154,7 +177,6 @@ function addKidInputRow(defaultName = '') {
   list.appendChild(div);
 }
 
-// Enregistrement des enfants + initialisation automatique des plannings
 async function saveInitialChildren() {
   const inputs = document.querySelectorAll('.setup-kid-name');
   const names = Array.from(inputs).map(i => i.value.trim()).filter(n => n.length > 0);
@@ -164,8 +186,7 @@ async function saveInitialChildren() {
     return;
   }
 
-  // 1. Insertion des enfants dans la table children
-  const kidsToInsert = names.map((name, idx) => ({
+  const kidsToInsert = names.map(name => ({
     family_id: currentFamily.id,
     name: name,
     avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(name)}`,
@@ -182,11 +203,9 @@ async function saveInitialChildren() {
     return;
   }
 
-  // 2. Génération automatique du planning de la semaine pour chaque enfant
   const tasksToInsert = [];
   createdKids.forEach((kid, kidIdx) => {
     DAYS.forEach((day, dayIdx) => {
-      // Rotation équitable des corvées quotidiennes
       const rot = (kidIdx + dayIdx) % DEFAULT_TASKS_ROTATION.length;
       const chores = DEFAULT_TASKS_ROTATION[rot];
       chores.forEach(chore => {
@@ -210,7 +229,6 @@ async function saveInitialChildren() {
   showProfileSelectScreen();
 }
 
-// 5. Écran de sélection de profil
 function showProfileSelectScreen() {
   document.getElementById('setup-screen').style.display = 'none';
   document.getElementById('app').style.display = 'none';
@@ -252,12 +270,10 @@ function returnToProfileSelect() {
   showProfileSelectScreen();
 }
 
-// Construction dynamique des onglets et vues selon les N enfants
 function buildNavigationAndSections() {
   const nav = document.getElementById('nav-container');
   nav.innerHTML = '';
 
-  // Onglet Duel
   const dashBtn = document.createElement('button');
   dashBtn.type = 'button';
   dashBtn.className = 'nav-tab active';
@@ -265,7 +281,6 @@ function buildNavigationAndSections() {
   dashBtn.onclick = () => switchTab('dash', dashBtn);
   nav.appendChild(dashBtn);
 
-  // Onglets Enfants (Visibles pour Admin ou pour l'enfant concerné)
   const sectionsContainer = document.getElementById('dynamic-kids-sections');
   sectionsContainer.innerHTML = '';
 
@@ -284,7 +299,6 @@ function buildNavigationAndSections() {
       nav.appendChild(kidBtn);
     }
 
-    // Vue HTML de l'enfant
     const sec = document.createElement('section');
     sec.id = `tab-kid-${k.id}`;
     sec.style.display = 'none';
@@ -300,12 +314,10 @@ function buildNavigationAndSections() {
     sectionsContainer.appendChild(sec);
   });
 
-  // Si c'est un enfant connecté, pré-sélectionner son nom sur le formulaire bonus
   if (currentRole !== 'admin') {
     bonusSelect.value = currentRole;
   }
 
-  // Onglet Bonus
   const bonusBtn = document.createElement('button');
   bonusBtn.type = 'button';
   bonusBtn.className = 'nav-tab';
@@ -327,12 +339,10 @@ function switchTab(id, btn) {
   if (target) target.style.display = 'block';
 }
 
-// Chargement des données depuis Supabase
 async function loadData() {
   const sync = document.getElementById('sync-indicator');
   if (sync) sync.innerText = 'Synchronisation...';
 
-  // 1. Récupération enfants à jour
   const { data: kids } = await supabaseClient
     .from('children')
     .select('*')
@@ -341,7 +351,6 @@ async function loadData() {
 
   if (kids) childrenList = kids;
 
-  // 2. Récupération tâches à jour
   const { data: tasks } = await supabaseClient
     .from('tasks')
     .select('*')
@@ -353,7 +362,6 @@ async function loadData() {
   renderApp();
 }
 
-// Coche / décoche d'une tâche
 async function toggleTaskMulti(taskId, newStatus) {
   const task = tasksList.find(t => t.id === taskId);
   if (task) task.status_completed = newStatus;
@@ -365,7 +373,6 @@ async function toggleTaskMulti(taskId, newStatus) {
     .eq('id', taskId);
 }
 
-// Ajout d'une tâche bonus réalisée
 async function submitBonusMulti(taskName) {
   const select = document.getElementById('bonus-assign');
   let targetChildId = select ? select.value : childrenList[0].id;
@@ -386,14 +393,12 @@ async function submitBonusMulti(taskName) {
   alert(`+1,00 € attribué à ${kid.name} pour : ${taskName} ! ⭐`);
 }
 
-// Clôture de la semaine pour N enfants (verrouille le fratricide et reset tâches)
 async function closeWeekMulti() {
   if (!confirm("⚠️ Clôturer la semaine ?\n\nLes gains nets après vol seront définitivement enregistrés et les tâches quotidiennes repartiront à zéro.")) return;
 
   const sync = document.getElementById('sync-indicator');
   if (sync) sync.innerText = 'Clôture...';
 
-  // 1. Calcul et sauvegarde des nouveaux porte-monnaies nets calculés
   const stats = calculateNetEarnings();
   for (const s of stats) {
     await supabaseClient
@@ -402,7 +407,6 @@ async function closeWeekMulti() {
       .eq('id', s.id);
   }
 
-  // 2. Reset des tâches quotidiennes à false
   await supabaseClient
     .from('tasks')
     .update({ status_completed: false })
@@ -410,10 +414,9 @@ async function closeWeekMulti() {
     .eq('is_bonus', false);
 
   await loadData();
-  alert("Semaine clôturée avec succès ! Les cagnottes sont verrouillées.");
+  alert("Semaine clôturée avec succès !");
 }
 
-// Paiement en espèces (vide les porte-monnaies)
 async function payKidsMulti() {
   if (!confirm("💶 Confirmer le versement aux enfants ?\n\nCela remettra tous les porte-monnaies à 0,00 €.")) return;
 
@@ -428,7 +431,6 @@ async function payKidsMulti() {
   alert("Porte-monnaies remis à 0,00 € !");
 }
 
-// Moteur de calcul du Fratricide pour N enfants
 function calculateNetEarnings() {
   return childrenList.map(kid => {
     const kidTasks = tasksList.filter(t => t.child_id === kid.id && !t.is_bonus);
@@ -445,7 +447,6 @@ function calculateNetEarnings() {
       netWallet: Number(kid.bonus_wallet || 0)
     };
   }).map((currentKid, _, all) => {
-    // Le fratricide à N enfants : chaque enfant prend (ou donne) aux autres selon l'écart
     let transferSum = 0;
     all.forEach(other => {
       if (other.id !== currentKid.id) {
@@ -469,11 +470,9 @@ function calculateNetEarnings() {
   });
 }
 
-// Rendu complet de l'interface
 function renderApp() {
   const stats = calculateNetEarnings();
 
-  // 1. Leaderboard
   const sorted = [...stats].sort((a, b) => b.pts - a.pts);
   const leader = sorted[0];
   const leaderPhoto = document.getElementById('leader-photo');
@@ -482,15 +481,14 @@ function renderApp() {
 
   if (leader && leader.pts > 0) {
     if (leaderName) leaderName.innerText = `${leader.name} en tête !`;
-    if (leaderDesc) leaderDesc.innerText = `${leader.pts.toFixed(1)} points quotidiens (${(leader.rate * 100).toFixed(0)}% d'assiduité)`;
+    if (leaderDesc) leaderDesc.innerText = `${leader.pts.toFixed(1)} pts (${(leader.rate * 100).toFixed(0)}% d'assiduité)`;
     if (leaderPhoto) leaderPhoto.src = leader.avatar;
   } else {
     if (leaderName) leaderName.innerText = "Égalité parfaite !";
-    if (leaderDesc) leaderDesc.innerText = "Le duel commence pour la fratrie";
+    if (leaderDesc) leaderDesc.innerText = "Le duel commence";
     if (leaderPhoto) leaderPhoto.src = "https://api.dicebear.com/7.x/bottts/svg?seed=duel";
   }
 
-  // 2. Cartes individuelles des enfants
   const cardsContainer = document.getElementById('kids-cards-container');
   if (cardsContainer) {
     cardsContainer.innerHTML = stats.map(s => `
@@ -507,7 +505,6 @@ function renderApp() {
     `).join('');
   }
 
-  // 3. Explications de péréquation
   const diffContainer = document.getElementById('diff-text-container');
   if (diffContainer) {
     diffContainer.innerHTML = stats.map(s => {
@@ -517,7 +514,6 @@ function renderApp() {
     }).join('');
   }
 
-  // 4. Rendu des listes de tâches quotidiennes par enfant
   childrenList.forEach(k => {
     const listDiv = document.getElementById(`tasks-list-${k.id}`);
     if (listDiv) {
@@ -538,14 +534,13 @@ function renderApp() {
   });
 }
 
-// Thèmes & Session
 function setTheme(name) {
   document.body.setAttribute('data-theme', name);
   localStorage.setItem('fratricide_theme', name);
 }
 
 async function handleLogout() {
-  await supabaseClient.auth.signOut();
+  if (supabaseClient) await supabaseClient.auth.signOut();
   location.reload();
 }
 
@@ -553,17 +548,23 @@ document.addEventListener('DOMContentLoaded', async () => {
   const savedTheme = localStorage.getItem('fratricide_theme') || 'ios';
   setTheme(savedTheme);
 
-  const { data: { session } } = await supabaseClient.auth.getSession();
-  if (session && session.user) {
-    const { data: famData } = await supabaseClient
-      .from('families')
-      .select('*')
-      .eq('parent_email', session.user.email)
-      .single();
+  if (supabaseClient) {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (session && session.user) {
+        const { data: famData } = await supabaseClient
+          .from('families')
+          .select('*')
+          .eq('parent_email', session.user.email)
+          .single();
 
-    if (famData) {
-      currentFamily = famData;
-      checkFamilySetup();
+        if (famData) {
+          currentFamily = famData;
+          checkFamilySetup();
+        }
+      }
+    } catch (e) {
+      console.warn("Session expirée ou non trouvée.");
     }
   }
 });
