@@ -5,52 +5,283 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Fratricide</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
-  <!-- Chargement Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <link rel="stylesheet" href="./style.css">
+  <style>
+    /* VARIABLES DE STYLE ET THÈMES */
+    :root, body[data-theme="ios"] {
+      --bg: #F8FAFC;
+      --card-bg: #FFFFFF;
+      --header-bg: linear-gradient(135deg, #4338CA, #6366F1);
+      --header-text: #FFFFFF;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --border: #E2E8F0;
+      --radius-card: 20px;
+      --radius-btn: 14px;
+      --shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+      --border-width: 1px;
+      --accent: #2563EB;
+      --switch-off: #CBD5E1;
+      --switch-on: #10B981;
+    }
+    body[data-theme="cyber"] {
+      --bg: #0B0F19;
+      --card-bg: #131C31;
+      --header-bg: #0F172A;
+      --header-text: #00F0FF;
+      --text: #F8FAFC;
+      --text-muted: #94A3B8;
+      --border: #1E293B;
+      --radius-card: 16px;
+      --radius-btn: 12px;
+      --shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+      --border-width: 1.5px;
+      --accent: #38BDF8;
+      --switch-off: #334155;
+      --switch-on: #00F0FF;
+    }
+    body[data-theme="pop"] {
+      --bg: #FFFBEB;
+      --card-bg: #FFFFFF;
+      --header-bg: #FFE4E6;
+      --header-text: #18181B;
+      --text: #18181B;
+      --text-muted: #52525B;
+      --border: #18181B;
+      --radius-card: 18px;
+      --radius-btn: 14px;
+      --shadow: 4px 4px 0px #18181B;
+      --border-width: 3px;
+      --accent: #0284C7;
+      --switch-off: #D4D4D8;
+      --switch-on: #4ADE80;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+    h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif; }
+    body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; transition: background-color 0.25s; }
+
+    /* AUTHENTIFICATION */
+    #login-screen, #profile-select-screen, #setup-screen {
+      padding: 30px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 90vh;
+    }
+    .login-box {
+      width: 100%;
+      max-width: 420px;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: var(--radius-card);
+      border: var(--border-width) solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .auth-tabs {
+      display: flex;
+      gap: 6px;
+      margin: 16px 0 20px;
+      background: var(--bg);
+      padding: 4px;
+      border-radius: var(--radius-btn);
+      border: var(--border-width) solid var(--border);
+    }
+    .auth-tab-btn {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: calc(var(--radius-btn) - 4px);
+      background: transparent;
+      color: var(--text-muted);
+      font-weight: 800;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .auth-tab-btn.active {
+      background: var(--card-bg);
+      color: var(--text);
+      box-shadow: var(--shadow);
+    }
+    .field { margin-bottom: 16px; }
+    .field label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 0.9rem; }
+    .field input, .mobile-select {
+      width: 100%;
+      padding: 12px;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-btn);
+      font-size: 1rem;
+      outline: none;
+      background: var(--card-bg);
+      color: var(--text);
+    }
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: var(--accent);
+      color: white;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-btn);
+      font-weight: 800;
+      font-size: 1rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .auth-status {
+      margin-top: 14px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-align: center;
+      min-height: 20px;
+    }
+
+    /* HEADER & NAV */
+    header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      border-bottom: var(--border-width) solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .brand { display: flex; align-items: center; gap: 8px; }
+    .header-actions { display: flex; align-items: center; gap: 8px; }
+    .theme-selector {
+      display: flex;
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      border-radius: 999px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .theme-btn {
+      background: transparent;
+      border: none;
+      border-radius: 50%;
+      width: 28px;
+      height: 28px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+    .btn-logout {
+      background: var(--card-bg);
+      color: var(--text);
+      border: var(--border-width) solid var(--border);
+      padding: 5px 12px;
+      border-radius: var(--radius-btn);
+      font-weight: 800;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    nav {
+      max-width: 600px;
+      margin: 12px auto 0;
+      padding: 0 12px;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    .nav-tab {
+      flex: 1;
+      min-width: 80px;
+      text-align: center;
+      padding: 10px 12px;
+      border: var(--border-width) solid var(--border);
+      border-radius: var(--radius-btn);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      font-weight: 800;
+      font-size: 0.85rem;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+    }
+    .nav-tab.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    /* CONTENU */
+    .container { max-width: 600px; margin: 0 auto; padding: 12px; }
+    .card {
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      padding: 16px;
+      border: var(--border-width) solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 14px;
+    }
+    .leader-card { text-align: center; background: rgba(245, 158, 11, 0.1); border-color: #F59E0B; }
+    .leader-badge { background: #F59E0B; color: white; font-weight: 800; font-size: 0.75rem; padding: 4px 12px; border-radius: 0 0 10px 10px; display: inline-block; margin-top: -16px; margin-bottom: 10px; }
+    .leader-avatar { width: 70px; height: 70px; border-radius: 50%; border: 3px solid white; margin-bottom: 6px; }
+    .duel-grid-multi { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .kid-box { background: var(--card-bg); padding: 12px; border-radius: var(--radius-card); border: var(--border-width) solid var(--border); box-shadow: var(--shadow); }
+    .pill-pts { background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; }
+    .final-box { margin-top: 8px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
+    .task-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .2s; border-radius: 34px; border: var(--border-width) solid var(--border); }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .2s; border-radius: 50%; }
+    input:checked + .slider { background-color: var(--switch-on); }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* PROFILS & BONUS */
+    .profiles-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; margin-bottom: 24px; }
+    .profile-card-btn { background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-card); padding: 16px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+    .profile-card-avatar { width: 60px; height: 60px; border-radius: 50%; }
+    .btn-admin-access { width: 100%; padding: 12px; background: transparent; border: var(--border-width) dashed var(--border); border-radius: var(--radius-btn); color: var(--text-muted); font-weight: 800; cursor: pointer; }
+    .btn-bonus-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-btn); margin-bottom: 8px; cursor: pointer; color: var(--text); }
+  </style>
 </head>
 <body data-theme="ios">
 
-  <!-- 1. Écran de Connexion / Inscription -->
+  <!-- 1. ÉCRAN AUTHENTIFICATION -->
   <div id="login-screen">
     <div class="login-box">
-      <div class="auth-header">
+      <div style="text-align: center; margin-bottom: 12px;">
         <h2>⚔️ Fratricide</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">Le duel des tâches du mois</p>
+        <p style="color: var(--text-muted); font-size: 0.95rem;">Le duel des tâches du mois</p>
       </div>
 
-      <!-- Onglets Mode -->
       <div class="auth-tabs">
-        <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Connexion</button>
-        <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Créer une famille</button>
+        <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="switchMode('login')">Connexion</button>
+        <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchMode('register')">Créer une famille</button>
       </div>
 
-      <!-- Formulaire Connexion -->
-      <form id="form-login" onsubmit="handleLogin(event)">
+      <!-- Connexion -->
+      <form id="form-login" onsubmit="doLogin(event)">
         <div class="field">
-          <label for="login-email">Email parent</label>
-          <input type="email" id="login-email" placeholder="exemple@famille.fr" required autocomplete="email">
+          <label>Email parent</label>
+          <input type="email" id="login-email" placeholder="papa@famille.fr" required>
         </div>
         <div class="field">
-          <label for="login-password">Mot de passe</label>
-          <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+          <label>Mot de passe</label>
+          <input type="password" id="login-password" placeholder="••••••••" required>
         </div>
         <button type="submit" class="btn-submit" id="btn-login-submit">Se connecter 🚀</button>
       </form>
 
-      <!-- Formulaire Inscription -->
-      <form id="form-register" onsubmit="handleRegister(event)" style="display: none;">
+      <!-- Inscription -->
+      <form id="form-register" onsubmit="doRegister(event)" style="display: none;">
         <div class="field">
-          <label for="reg-family-name">Nom de la famille</label>
+          <label>Nom de la famille</label>
           <input type="text" id="reg-family-name" placeholder="Ex: Famille Dupont" required>
         </div>
         <div class="field">
-          <label for="reg-email">Email parent</label>
-          <input type="email" id="reg-email" placeholder="exemple@famille.fr" required autocomplete="email">
+          <label>Email parent</label>
+          <input type="email" id="reg-email" placeholder="maman@famille.fr" required>
         </div>
         <div class="field">
-          <label for="reg-password">Mot de passe (6 car. min)</label>
-          <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+          <label>Mot de passe (6 car. min)</label>
+          <input type="password" id="reg-password" placeholder="••••••••" minlength="6" required>
         </div>
         <button type="submit" class="btn-submit" id="btn-reg-submit">Créer mon espace famille ✨</button>
       </form>
@@ -59,49 +290,45 @@
     </div>
   </div>
 
-  <!-- 2. Écran Sélection Profil -->
+  <!-- 2. SÉLECTION PROFIL -->
   <div id="profile-select-screen" style="display: none;">
     <div class="login-box" style="text-align: center;">
       <h2 id="family-title-banner">La Fratrie</h2>
       <p style="color: var(--text-muted); margin: 6px 0 20px;">Qui utilise l'application ?</p>
-      
       <div id="profiles-grid" class="profiles-selection-grid"></div>
-
-      <button type="button" class="btn-admin-access" onclick="selectRole('admin')">⚙️ Espace Parents (Gestion)</button>
+      <button type="button" class="btn-admin-access" onclick="selectRole('admin')">⚙️ Espace Parents</button>
       <div style="margin-top: 14px;">
-        <button type="button" class="btn-logout-small" onclick="handleLogout()">Changer de famille</button>
+        <button type="button" onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);text-decoration:underline;cursor:pointer;">Changer de famille</button>
       </div>
     </div>
   </div>
 
-  <!-- 3. Écran Configuration des Enfants -->
+  <!-- 3. CONFIGURATION DES ENFANTS -->
   <div id="setup-screen" style="display: none;">
-    <div class="login-box" style="max-width: 500px;">
-      <h2>👶 Configuration des Enfants</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Ajoutez les enfants de la fratrie :</p>
-      
+    <div class="login-box">
+      <h2>👶 Enfants de la famille</h2>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Indiquez les prénoms des enfants :</p>
       <div id="setup-kids-list"></div>
-
-      <button type="button" class="btn-add-kid" onclick="addKidInputRow()">➕ Ajouter un autre enfant</button>
-      <button type="button" class="btn-submit" style="margin-top: 18px;" onclick="saveInitialChildren()">Valider & Lancer l'Arène 🚀</button>
+      <button type="button" onclick="addKidRow()" style="width:100%;padding:8px;border:2px dashed var(--border);background:none;margin-top:8px;cursor:pointer;font-weight:700;">➕ Ajouter un autre enfant</button>
+      <button type="button" class="btn-submit" style="margin-top: 16px;" onclick="saveKids()">Lancer l'Arène 🚀</button>
     </div>
   </div>
 
-  <!-- 4. Application Principale -->
+  <!-- 4. APP PRINCIPALE -->
   <div id="app" style="display: none;">
     <header>
       <div class="brand">
         <h3>⚔️ Fratricide</h3>
-        <span class="badge-sync" id="sync-indicator">🟢 Supabase</span>
+        <span id="sync-indicator" style="font-size:0.75rem;padding:3px 8px;border-radius:10px;background:rgba(0,0,0,0.1);">🟢 Prêt</span>
       </div>
       <div class="header-actions">
         <div class="theme-selector">
-          <button type="button" class="theme-btn" onclick="setTheme('ios')" title="iOS">🍏</button>
-          <button type="button" class="theme-btn" onclick="setTheme('cyber')" title="Cyber">🎮</button>
-          <button type="button" class="theme-btn" onclick="setTheme('pop')" title="Pop">⚡</button>
+          <button type="button" class="theme-btn" onclick="setTheme('ios')">🍏</button>
+          <button type="button" class="theme-btn" onclick="setTheme('cyber')">🎮</button>
+          <button type="button" class="theme-btn" onclick="setTheme('pop')">⚡</button>
         </div>
-        <span id="user-tag"></span>
-        <button type="button" class="btn-logout" onclick="returnToProfileSelect()">Profils</button>
+        <span id="user-tag" style="font-weight:800;font-size:0.85rem;"></span>
+        <button type="button" class="btn-logout" onclick="returnProfiles()">Profils</button>
       </div>
     </header>
 
@@ -109,36 +336,29 @@
 
     <main class="container">
       <section id="tab-dash">
-        <div class="card leader-card" id="leader-card">
-          <div class="leader-badge">👑 LEADER DE LA SEMAINE</div>
-          <div class="leader-content">
-            <img id="leader-photo" class="leader-avatar" src="" alt="Leader" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=leader';">
-            <div>
+        <div class="card leader-card">
+          <div class="leader-badge">👑 EN TÊTE CETTE SEMAINE</div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:14px;">
+            <img id="leader-photo" class="leader-avatar" src="" alt="Leader" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=duel';">
+            <div style="text-align:left;">
               <h2 id="leader-name">...</h2>
-              <p id="leader-desc" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+              <p id="leader-desc" style="color: var(--text-muted); font-size: 0.85rem;"></p>
             </div>
           </div>
         </div>
 
         <div class="duel-grid-multi" id="kids-cards-container"></div>
 
-        <div class="card info-banner">
+        <div class="card">
           <h4 style="margin-bottom: 6px;">⚖️ Péréquation des cagnottes :</h4>
-          <div id="diff-text-container" style="font-size: 0.9rem;"></div>
+          <div id="diff-text-container" style="font-size: 0.9rem; color:var(--text-muted);"></div>
         </div>
 
-        <div class="card reset-card" id="admin-reset-card" style="display: none;">
-          <h4 style="color: #DC2626; margin-bottom: 4px;">⚙️ Gestion Parents</h4>
-          <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-muted);">Clôture hebdomadaire et versement :</p>
-          <div class="admin-actions-grid">
-            <button type="button" class="btn-admin-action btn-cloture" onclick="closeWeekMulti()">
-              🔒 Clôturer la semaine
-              <small>Fige les gains/vols et remet les tâches à 0</small>
-            </button>
-            <button type="button" class="btn-admin-action btn-payer" onclick="payKidsMulti()">
-              💶 Payer les enfants
-              <small>Remet les porte-monnaies à 0 €</small>
-            </button>
+        <div class="card" id="admin-reset-card" style="display: none; border-color:#DC2626;">
+          <h4 style="color:#DC2626;margin-bottom:8px;">⚙️ Gestion Parents</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <button type="button" class="btn-submit" style="background:#2563EB;" onclick="closeWeek()">🔒 Clôturer Semaine</button>
+            <button type="button" class="btn-submit" style="background:#059669;" onclick="payKids()">💶 Payer Enfants</button>
           </div>
         </div>
       </section>
@@ -147,64 +367,361 @@
 
       <section id="tab-bonus" style="display: none;">
         <div class="card">
-          <div class="section-title">
-            <h3>⭐ Missions Bonus (+1,00 €)</h3>
-          </div>
-          
-          <div class="field" style="margin: 14px 0;">
-            <label for="bonus-assign">Attribuer la mission à :</label>
+          <h3 style="margin-bottom:12px;">⭐ Missions Bonus (+1,00 €)</h3>
+          <div class="field">
+            <label>Pour :</label>
             <select id="bonus-assign" class="mobile-select"></select>
           </div>
-
-          <div class="bonus-grid">
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Faire une lessive')">
-              <div class="bonus-icon-box">🧺</div>
-              <div>
-                <strong>Faire une lessive</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Balayer les exterieurs')">
-              <div class="bonus-icon-box">🧹</div>
-              <div>
-                <strong>Balayer extérieurs</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Passer l aspirateur')">
-              <div class="bonus-icon-box">✨</div>
-              <div>
-                <strong>Passer l'aspirateur</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Nettoyer la baie vitree')">
-              <div class="bonus-icon-box">🪟</div>
-              <div>
-                <strong>Nettoyer baie vitrée</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Preparer un repas')">
-              <div class="bonus-icon-box">🍳</div>
-              <div>
-                <strong>Préparer un repas</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-            <button type="button" class="btn-bonus-card" onclick="submitBonusMulti('Vider les poubelles')">
-              <div class="bonus-icon-box">🗑️</div>
-              <div>
-                <strong>Vider les poubelles</strong>
-                <small>+1.00 €</small>
-              </div>
-            </button>
-          </div>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Faire une lessive')">🧺 Faire une lessive (+1.00 €)</button>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Balayer extérieurs')">🧹 Balayer extérieurs (+1.00 €)</button>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Passer aspirateur')">✨ Passer l'aspirateur (+1.00 €)</button>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Nettoyer baie vitrée')">🪟 Nettoyer baie vitrée (+1.00 €)</button>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Préparer un repas')">🍳 Préparer un repas (+1.00 €)</button>
+          <button type="button" class="btn-bonus-card" onclick="addBonus('Vider les poubelles')">🗑️ Vider les poubelles (+1.00 €)</button>
         </div>
       </section>
     </main>
   </div>
 
-  <script src="./script.js"></script>
+  <script>
+    // INITIALISATION SUPABASE
+    const SUPABASE_URL = "https://efnqxsxdpanpcyfbwtes.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_m2lOIUxo6FVmufkFPjxpNA_F3XIcg90";
+    let sb = null;
+
+    if (window.supabase) {
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    }
+
+    let currentFamily = null;
+    let currentRole = 'admin';
+    let children = [];
+    let tasks = [];
+
+    const CHORES = [
+      ["Mettre la table", "Vider le lave-vaisselle"],
+      ["Débarrasser la table", "Remplir le lave-vaisselle"],
+      ["Ranger le salon", "Vider les poubelles"]
+    ];
+    const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+    // BASCULE CONNEXION / CRÉATION
+    function switchMode(mode) {
+      const isReg = mode === 'register';
+      document.getElementById('form-login').style.display = isReg ? 'none' : 'block';
+      document.getElementById('form-register').style.display = isReg ? 'block' : 'none';
+      document.getElementById('tab-btn-login').className = 'auth-tab-btn ' + (!isReg ? 'active' : '');
+      document.getElementById('tab-btn-register').className = 'auth-tab-btn ' + (isReg ? 'active' : '');
+      document.getElementById('auth-status-msg').innerText = '';
+    }
+
+    // INSCRIPTION
+    async function doRegister(e) {
+      e.preventDefault();
+      const status = document.getElementById('auth-status-msg');
+      const name = document.getElementById('reg-family-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const pwd = document.getElementById('reg-password').value;
+
+      status.style.color = 'var(--text-muted)';
+      status.innerText = 'Création du compte...';
+
+      try {
+        const { data: auth, error: aErr } = await sb.auth.signUp({ email: email, password: pwd });
+        if (aErr) throw aErr;
+
+        const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name }]).select().single();
+        if (fErr) throw fErr;
+
+        currentFamily = fam;
+        showSetup();
+      } catch (err) {
+        status.style.color = '#DC2626';
+        status.innerText = err.message || "Erreur de création.";
+      }
+    }
+
+    // CONNEXION
+    async function doLogin(e) {
+      e.preventDefault();
+      const status = document.getElementById('auth-status-msg');
+      const email = document.getElementById('login-email').value.trim();
+      const pwd = document.getElementById('login-password').value;
+
+      status.style.color = 'var(--text-muted)';
+      status.innerText = 'Connexion...';
+
+      try {
+        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email: email, password: pwd });
+        if (aErr) throw aErr;
+
+        const { data: fam, error: fErr } = await sb.from('families').select('*').eq('parent_email', email).single();
+        if (fErr) throw fErr;
+
+        currentFamily = fam;
+        checkKids();
+      } catch (err) {
+        status.style.color = '#DC2626';
+        status.innerText = "Email ou mot de passe incorrect.";
+      }
+    }
+
+    async function checkKids() {
+      document.getElementById('login-screen').style.display = 'none';
+      const { data: k } = await sb.from('children').select('*').eq('family_id', currentFamily.id);
+      if (!k || k.length < 2) {
+        showSetup();
+      } else {
+        children = k;
+        showProfiles();
+      }
+    }
+
+    function showSetup() {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('setup-screen').style.display = 'flex';
+      const list = document.getElementById('setup-kids-list');
+      list.innerHTML = '';
+      addKidRow('Enfant 1');
+      addKidRow('Enfant 2');
+    }
+
+    function addKidRow(name = '') {
+      const list = document.getElementById('setup-kids-list');
+      const div = document.createElement('div');
+      div.className = 'field';
+      div.innerHTML = `<input type="text" class="kid-name-in" placeholder="Prénom" value="${name}" required style="margin-top:6px;">`;
+      list.appendChild(div);
+    }
+
+    async function saveKids() {
+      const inputs = document.querySelectorAll('.kid-name-in');
+      const names = Array.from(inputs).map(i => i.value.trim()).filter(n => n.length > 0);
+      if (names.length < 2) return alert("Indiquez au moins 2 enfants.");
+
+      const toInsert = names.map(n => ({
+        family_id: currentFamily.id,
+        name: n,
+        avatar_url: `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(n)}`,
+        bonus_wallet: 0.00
+      }));
+
+      const { data: createdKids } = await sb.from('children').insert(toInsert).select();
+      children = createdKids;
+
+      const tasksToInsert = [];
+      createdKids.forEach((k, kidIdx) => {
+        DAYS.forEach((day, dIdx) => {
+          const chores = CHORES[(kidIdx + dIdx) % CHORES.length];
+          chores.forEach(chore => {
+            tasksToInsert.push({
+              family_id: currentFamily.id,
+              child_id: k.id,
+              task_name: chore,
+              day_of_week: day,
+              status_completed: false
+            });
+          });
+        });
+      });
+      await sb.from('tasks').insert(tasksToInsert);
+
+      document.getElementById('setup-screen').style.display = 'none';
+      showProfiles();
+    }
+
+    function showProfiles() {
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('profile-select-screen').style.display = 'flex';
+      document.getElementById('family-title-banner').innerText = currentFamily.family_name;
+
+      document.getElementById('profiles-grid').innerHTML = children.map(k => `
+        <button type="button" class="profile-card-btn" onclick="selectRole('${k.id}')">
+          <img src="${k.avatar_url}" class="profile-card-avatar">
+          <strong>${k.name}</strong>
+        </button>
+      `).join('');
+    }
+
+    function selectRole(role) {
+      currentRole = role;
+      document.getElementById('profile-select-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+
+      const tag = document.getElementById('user-tag');
+      const adminBox = document.getElementById('admin-reset-card');
+      if (role === 'admin') {
+        tag.innerText = "Parents ⚙️";
+        adminBox.style.display = 'block';
+      } else {
+        const k = children.find(c => c.id === role);
+        tag.innerText = k ? k.name : '';
+        adminBox.style.display = 'none';
+      }
+
+      buildNav();
+      fetchData();
+    }
+
+    function returnProfiles() {
+      showProfiles();
+    }
+
+    function buildNav() {
+      const nav = document.getElementById('nav-container');
+      nav.innerHTML = '<button type="button" class="nav-tab active" onclick="tab(\'dash\', this)">📊 Duel</button>';
+
+      const secDiv = document.getElementById('dynamic-kids-sections');
+      secDiv.innerHTML = '';
+      const bSelect = document.getElementById('bonus-assign');
+      bSelect.innerHTML = '';
+
+      children.forEach(k => {
+        bSelect.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+        if (currentRole === 'admin' || currentRole === k.id) {
+          nav.innerHTML += `<button type="button" class="nav-tab" onclick="tab('kid-${k.id}', this)">👦 ${k.name}</button>`;
+        }
+        secDiv.innerHTML += `
+          <section id="tab-kid-${k.id}" style="display:none;">
+            <div class="card">
+              <h3>Planning ${k.name} (0,5 pt / tâche)</h3>
+              <div id="t-list-${k.id}" style="margin-top:10px;"></div>
+            </div>
+          </section>
+        `;
+      });
+
+      if (currentRole !== 'admin') bSelect.value = currentRole;
+      nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'bonus\', this)">⭐ Bonus</button>';
+    }
+
+    function tab(id, btn) {
+      document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('main > section, #dynamic-kids-sections > section').forEach(s => s.style.display = 'none');
+      const target = document.getElementById(`tab-${id}`);
+      if (target) target.style.display = 'block';
+    }
+
+    async function fetchData() {
+      const { data: k } = await sb.from('children').select('*').eq('family_id', currentFamily.id);
+      if (k) children = k;
+      const { data: t } = await sb.from('tasks').select('*').eq('family_id', currentFamily.id);
+      if (t) tasks = t;
+      render();
+    }
+
+    async function toggleTask(id, val) {
+      const t = tasks.find(x => x.id === id);
+      if (t) t.status_completed = val;
+      render();
+      await sb.from('tasks').update({ status_completed: val }).eq('id', id);
+    }
+
+    async function addBonus(name) {
+      const kId = document.getElementById('bonus-assign').value;
+      const kid = children.find(c => c.id === kId);
+      if (!kid) return;
+
+      const newW = Number((Number(kid.bonus_wallet || 0) + 1.00).toFixed(2));
+      kid.bonus_wallet = newW;
+      render();
+      await sb.from('children').update({ bonus_wallet: newW }).eq('id', kId);
+      alert(`+1,00 € pour ${kid.name} (${name}) !`);
+    }
+
+    function render() {
+      // Calcul assiduité & cagnottes
+      const stats = children.map(k => {
+        const kTasks = tasks.filter(t => t.child_id === k.id);
+        const pts = kTasks.filter(t => t.status_completed).length * 0.5;
+        const max = kTasks.length * 0.5;
+        const rate = max > 0 ? pts / max : 0;
+        return { ...k, pts, rate, base: Number(k.bonus_wallet || 0), net: Number(k.bonus_wallet || 0) };
+      });
+
+      stats.forEach(k => {
+        let diffSum = 0;
+        stats.forEach(other => {
+          if (other.id !== k.id) {
+            if (k.rate > other.rate) diffSum += (other.base * (k.rate - other.rate)) / (stats.length - 1);
+            else if (k.rate < other.rate) diffSum -= (k.base * (other.rate - k.rate)) / (stats.length - 1);
+          }
+        });
+        k.net = Math.max(0, Number((k.base + diffSum).toFixed(2)));
+        k.delta = Number(diffSum.toFixed(2));
+      });
+
+      // Leader
+      const sorted = [...stats].sort((a, b) => b.pts - a.pts);
+      const leader = sorted[0];
+      if (leader && leader.pts > 0) {
+        document.getElementById('leader-name').innerText = leader.name + " en tête !";
+        document.getElementById('leader-desc').innerText = `${leader.pts.toFixed(1)} pts (${(leader.rate*100).toFixed(0)}% d'assiduité)`;
+        document.getElementById('leader-photo').src = leader.avatar_url;
+      } else {
+        document.getElementById('leader-name').innerText = "Égalité parfaite !";
+        document.getElementById('leader-desc').innerText = "Le duel de la fratrie commence";
+        document.getElementById('leader-photo').src = "https://api.dicebear.com/7.x/bottts/svg?seed=duel";
+      }
+
+      // Cartes Enfants
+      document.getElementById('kids-cards-container').innerHTML = stats.map(s => `
+        <div class="kid-box">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <strong>${s.name}</strong>
+            <span class="pill-pts">${s.pts.toFixed(1)} pts</span>
+          </div>
+          <p style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">Bonus : ${s.base.toFixed(2)} €</p>
+          <div class="final-box">Net : <strong style="color:var(--accent);">${s.net.toFixed(2)} €</strong></div>
+        </div>
+      `).join('');
+
+      // Diff
+      document.getElementById('diff-text-container').innerHTML = stats.map(s => `
+        <p>• <strong>${s.name}</strong> : ${s.delta >= 0 ? '+' : ''}${s.delta.toFixed(2)} € sur la cagnotte.</p>
+      `).join('');
+
+      // Tâches
+      children.forEach(k => {
+        const div = document.getElementById(`t-list-${k.id}`);
+        if (div) {
+          const kTasks = tasks.filter(t => t.child_id === k.id);
+          div.innerHTML = kTasks.map(t => `
+            <div class="task-row">
+              <div>
+                <strong>${t.day_of_week}</strong>
+                <span style="font-size:0.85rem;color:var(--text-muted);display:block;">${t.task_name}</span>
+              </div>
+              <label class="switch">
+                <input type="checkbox" ${t.status_completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked)">
+                <span class="slider"></span>
+              </label>
+            </div>
+          `).join('');
+        }
+      });
+    }
+
+    async function closeWeek() {
+      if (!confirm("Clôturer la semaine et figer les gains ?")) return;
+      await sb.from('tasks').update({ status_completed: false }).eq('family_id', currentFamily.id);
+      fetchData();
+      alert("Semaine clôturée !");
+    }
+
+    async function payKids() {
+      if (!confirm("Remettre les cagnottes à 0 € ?")) return;
+      for (const k of children) {
+        await sb.from('children').update({ bonus_wallet: 0.00 }).eq('id', k.id);
+      }
+      fetchData();
+      alert("Cagnottes remises à 0 € !");
+    }
+
+    function setTheme(t) { document.body.setAttribute('data-theme', t); }
+    async function doLogout() { if(sb) await sb.auth.signOut(); location.reload(); }
+  </script>
 </body>
 </html>
