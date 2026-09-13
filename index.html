@@ -60,7 +60,7 @@
     h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; transition: background-color 0.25s; }
 
-    #login-screen, #profile-select-screen, #setup-screen {
+    #splash-screen, #login-screen, #profile-select-screen, #setup-screen {
       padding: 30px 14px;
       display: flex;
       justify-content: center;
@@ -318,8 +318,16 @@
 </head>
 <body data-theme="ios">
 
+  <!-- 0. ÉCRAN DE CHARGEMENT RAPIDE (Évite le flash du login à l'actualisation) -->
+  <div id="splash-screen">
+    <div class="login-box" style="text-align: center; padding: 40px 20px;">
+      <h2>⚔️ Fratricide</h2>
+      <p style="color: var(--text-muted); margin-top: 10px; font-weight: 700;">Connexion automatique...</p>
+    </div>
+  </div>
+
   <!-- 1. CONNEXION / INSCRIPTION -->
-  <div id="login-screen">
+  <div id="login-screen" style="display: none;">
     <div class="login-box">
       <div style="text-align: center; margin-bottom: 12px;">
         <h2>⚔️ Fratricide</h2>
@@ -452,7 +460,7 @@
         </div>
       </section>
 
-      <!-- PLANNINGS INDIVIDUELS DES ENFANTS -->
+      <!-- PLANNINGS ENFANTS -->
       <div id="dynamic-kids-sections"></div>
 
       <!-- MISSIONS BONUS ENFANTS -->
@@ -503,7 +511,6 @@
 
       <!-- RÉGLAGES ET PERSONNALISATION (ADMIN) -->
       <section id="tab-settings" style="display: none;">
-        <!-- Paramètres Duo -->
         <div class="card" style="border: 2px solid #FB7185;">
           <h3 style="color:#E11D48;">🌶️ Paramètres Duo / Couple</h3>
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
@@ -519,7 +526,7 @@
             <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Nouvelle attention (+ points) :</p>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
               <input type="text" id="cfg-action-icon" placeholder="Emoji" style="width:65px;text-align:center;">
-              <input type="text" id="cfg-action-title" placeholder="Titre (ex: Petit déj servi...)" style="flex:1;">
+              <input type="text" id="cfg-action-title" placeholder="Titre" style="flex:1;">
             </div>
             <div class="field" style="margin-bottom:8px;">
               <label>Points attribués :</label>
@@ -533,7 +540,7 @@
             <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Nouvelle récompense (- points) :</p>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
               <input type="text" id="cfg-reward-icon" placeholder="Emoji" style="width:65px;text-align:center;">
-              <input type="text" id="cfg-reward-title" placeholder="Titre (ex: Resto, Gâterie...)" style="flex:1;">
+              <input type="text" id="cfg-reward-title" placeholder="Titre" style="flex:1;">
             </div>
             <div class="field" style="margin-bottom:8px;">
               <label>Coût en points :</label>
@@ -544,7 +551,6 @@
           <div id="cfg-existing-rewards"></div>
         </div>
 
-        <!-- Tâches quotidiennes enfants -->
         <div class="card">
           <h3>📅 Tâches Quotidiennes Enfants</h3>
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
@@ -566,7 +572,6 @@
           <div id="cfg-existing-tasks"></div>
         </div>
 
-        <!-- Missions Bonus Enfants -->
         <div class="card">
           <h3>💰 Missions Bonus Enfants (€)</h3>
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
@@ -583,7 +588,6 @@
           <div id="cfg-existing-bonuses"></div>
         </div>
 
-        <!-- Sécurité PIN -->
         <div class="card">
           <h3>🔒 Sécurité</h3>
           <button type="button" class="btn-submit" style="margin-top:8px;background:var(--text-muted);" onclick="changePinPrompt()">Modifier mon Code PIN</button>
@@ -598,7 +602,12 @@
     let sb = null;
 
     if (window.supabase) {
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+        auth: {
+          persistSession: true,
+          autoRefreshToken: true
+        }
+      });
     }
 
     let currentFamily = null;
@@ -643,6 +652,20 @@
     ];
     const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
+    function hideAllScreens() {
+      const splash = document.getElementById('splash-screen');
+      if (splash) splash.style.display = 'none';
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('profile-select-screen').style.display = 'none';
+      document.getElementById('setup-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'none';
+    }
+
+    function showLoginScreen() {
+      hideAllScreens();
+      document.getElementById('login-screen').style.display = 'flex';
+    }
+
     function switchMode(mode) {
       const isReg = mode === 'register';
       document.getElementById('form-login').style.display = isReg ? 'none' : 'block';
@@ -663,13 +686,14 @@
       status.innerText = 'Création du compte...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signUp({ email: email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signUp({ email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name, parent_pin: '1234' }]).select().single();
         if (fErr) throw fErr;
 
         currentFamily = fam;
+        localStorage.setItem('fratricide_saved_email', email);
         showSetup();
       } catch (err) {
         status.style.color = '#DC2626';
@@ -687,14 +711,15 @@
       status.innerText = 'Connexion...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email: email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').select('*').eq('parent_email', email).single();
         if (fErr) throw fErr;
 
         currentFamily = fam;
-        checkKids();
+        localStorage.setItem('fratricide_saved_email', email);
+        await checkKids();
       } catch (err) {
         status.style.color = '#DC2626';
         status.innerText = "Email ou mot de passe incorrect.";
@@ -702,7 +727,6 @@
     }
 
     async function checkKids() {
-      document.getElementById('login-screen').style.display = 'none';
       const { data: k } = await sb.from('children').select('*').eq('family_id', currentFamily.id);
       if (!k || k.length < 2) {
         showSetup();
@@ -737,7 +761,7 @@
     }
 
     function showSetup() {
-      document.getElementById('login-screen').style.display = 'none';
+      hideAllScreens();
       document.getElementById('setup-screen').style.display = 'flex';
       const list = document.getElementById('setup-kids-list');
       list.innerHTML = '';
@@ -787,13 +811,11 @@
       await ensureBonusTemplates();
       await ensureCoupleDefaults();
 
-      document.getElementById('setup-screen').style.display = 'none';
       showProfiles();
     }
 
     function showProfiles() {
-      document.getElementById('setup-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'none';
+      hideAllScreens();
       document.getElementById('profile-select-screen').style.display = 'flex';
       document.getElementById('family-title-banner').innerText = currentFamily.family_name;
 
@@ -852,7 +874,7 @@
 
     function selectRole(role) {
       currentRole = role;
-      document.getElementById('profile-select-screen').style.display = 'none';
+      hideAllScreens();
       document.getElementById('app').style.display = 'block';
 
       const tag = document.getElementById('user-tag');
@@ -1343,31 +1365,55 @@
     }
 
     function setTheme(t) { document.body.setAttribute('data-theme', t); }
-    async function doLogout() { if(sb) await sb.auth.signOut(); location.reload(); }
 
-    // GESTION AUTOMATIQUE DE LA PERSISTANCE DE SESSION
+    async function doLogout() {
+      localStorage.removeItem('fratricide_saved_email');
+      if (sb) await sb.auth.signOut();
+      location.reload();
+    }
+
+    // RESTAURATION FIABILISÉE SANS FLASH NI DEMANDE DE MOT DE PASSE
     document.addEventListener('DOMContentLoaded', async () => {
       const savedTheme = localStorage.getItem('fratricide_theme') || 'ios';
       setTheme(savedTheme);
 
-      if (!sb) return;
+      const savedEmail = localStorage.getItem('fratricide_saved_email');
+
+      if (!sb) {
+        showLoginScreen();
+        return;
+      }
 
       try {
+        let activeEmail = savedEmail;
+
+        // 1. Vérifie si Supabase a la session
         const { data: { session } } = await sb.auth.getSession();
         if (session && session.user) {
+          activeEmail = session.user.email;
+          localStorage.setItem('fratricide_saved_email', activeEmail);
+        }
+
+        // 2. Si un email de famille est mémorisé, on charge directement les données
+        if (activeEmail) {
           const { data: fam, error } = await sb
             .from('families')
             .select('*')
-            .eq('parent_email', session.user.email)
+            .eq('parent_email', activeEmail)
             .single();
 
           if (fam && !error) {
             currentFamily = fam;
             await checkKids();
+            return;
           }
         }
+
+        // Aucun utilisateur mémorisé -> afficher le login
+        showLoginScreen();
       } catch (err) {
-        console.warn("Session introuvable ou expirée :", err);
+        console.warn("Erreur auto-login :", err);
+        showLoginScreen();
       }
     });
   </script>
