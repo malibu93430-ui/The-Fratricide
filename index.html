@@ -69,7 +69,7 @@
     }
     .login-box {
       width: 100%;
-      max-width: 420px;
+      max-width: 440px;
       background: var(--card-bg);
       padding: 24px;
       border-radius: var(--radius-card);
@@ -102,27 +102,27 @@
       color: var(--text);
       box-shadow: var(--shadow);
     }
-    .field { margin-bottom: 16px; }
-    .field label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 0.9rem; }
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 0.85rem; }
     .field input, .mobile-select {
       width: 100%;
-      padding: 12px;
+      padding: 11px 13px;
       border: var(--border-width) solid var(--border);
       border-radius: var(--radius-btn);
-      font-size: 1rem;
+      font-size: 0.95rem;
       outline: none;
       background: var(--card-bg);
       color: var(--text);
     }
     .btn-submit {
       width: 100%;
-      padding: 14px;
+      padding: 13px;
       background: var(--accent);
       color: white;
       border: var(--border-width) solid var(--border);
       border-radius: var(--radius-btn);
       font-weight: 800;
-      font-size: 1rem;
+      font-size: 0.95rem;
       cursor: pointer;
       box-shadow: var(--shadow);
     }
@@ -190,7 +190,7 @@
       flex: 1;
       min-width: 80px;
       text-align: center;
-      padding: 10px 12px;
+      padding: 10px 8px;
       border: var(--border-width) solid var(--border);
       border-radius: var(--radius-btn);
       background: var(--card-bg);
@@ -199,6 +199,7 @@
       font-size: 0.85rem;
       cursor: pointer;
       box-shadow: var(--shadow);
+      white-space: nowrap;
     }
     .nav-tab.active {
       background: var(--accent);
@@ -221,7 +222,9 @@
     .kid-box { background: var(--card-bg); padding: 12px; border-radius: var(--radius-card); border: var(--border-width) solid var(--border); box-shadow: var(--shadow); }
     .pill-pts { background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; }
     .final-box { margin-top: 8px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
+    
     .task-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .task-meta { display: flex; flex-direction: column; }
     .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .2s; border-radius: 34px; border: var(--border-width) solid var(--border); }
@@ -233,9 +236,12 @@
     .profile-card-btn { background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-card); padding: 16px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .profile-card-avatar { width: 60px; height: 60px; border-radius: 50%; }
     .btn-admin-access { width: 100%; padding: 12px; background: transparent; border: var(--border-width) dashed var(--border); border-radius: var(--radius-btn); color: var(--text-muted); font-weight: 800; cursor: pointer; }
-    .btn-bonus-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-btn); margin-bottom: 8px; cursor: pointer; color: var(--text); }
+    
+    .bonus-grid { display: grid; grid-template-columns: 1fr; gap: 8px; }
+    .btn-bonus-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-btn); cursor: pointer; color: var(--text); text-align: left; }
+    .btn-bonus-card:active { transform: scale(0.98); }
+    .bonus-icon-box { font-size: 1.6rem; width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.03); border-radius: 12px; }
 
-    /* MODALE CODE PIN */
     .modal-backdrop {
       position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
@@ -268,6 +274,26 @@
       border-radius: 12px;
       background: var(--bg);
       color: var(--text);
+    }
+
+    /* GESTION & PARAMÈTRES */
+    .config-table-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px dashed var(--border);
+      font-size: 0.9rem;
+    }
+    .btn-del {
+      background: #EF4444;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 0.8rem;
     }
   </style>
 </head>
@@ -325,15 +351,14 @@
       <p style="color: var(--text-muted); margin: 6px 0 20px;">Qui utilise l'application ?</p>
       <div id="profiles-grid" class="profiles-selection-grid"></div>
       
-      <!-- Bouton Espace Parents qui déclenche la modale PIN -->
       <button type="button" class="btn-admin-access" onclick="openPinModal()">🔒 Espace Parents (Gestion)</button>
       <div style="margin-top: 14px;">
-        <button type="button" onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);text-decoration:underline;cursor:pointer;">Changer de famille</button>
+        <button type="button" onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);text-decoration:underline;cursor:pointer;">Changer de compte</button>
       </div>
     </div>
   </div>
 
-  <!-- MODALE SAISIE DU CODE PIN PARENT -->
+  <!-- MODALE PIN PARENT -->
   <div id="pin-modal" class="modal-backdrop">
     <div class="pin-box">
       <h3>🔒 Code PIN Parent</h3>
@@ -347,18 +372,18 @@
     </div>
   </div>
 
-  <!-- 3. CONFIGURATION DES ENFANTS -->
+  <!-- 3. CONFIGURATION DES ENFANTS (AU 1er LANCEMENT) -->
   <div id="setup-screen" style="display: none;">
     <div class="login-box">
       <h2>👶 Enfants de la famille</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Indiquez les prénoms des enfants :</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Indiquez les prénoms de la fratrie :</p>
       <div id="setup-kids-list"></div>
-      <button type="button" onclick="addKidRow()" style="width:100%;padding:8px;border:2px dashed var(--border);background:none;margin-top:8px;cursor:pointer;font-weight:700;">➕ Ajouter un autre enfant</button>
+      <button type="button" onclick="addKidRow()" style="width:100%;padding:8px;border:2px dashed var(--border);background:none;margin-top:8px;cursor:pointer;font-weight:700;">➕ Ajouter un enfant</button>
       <button type="button" class="btn-submit" style="margin-top: 16px;" onclick="saveKids()">Lancer l'Arène 🚀</button>
     </div>
   </div>
 
-  <!-- 4. APP PRINCIPALE -->
+  <!-- 4. APPLICATION PRINCIPALE -->
   <div id="app" style="display: none;">
     <header>
       <div class="brand">
@@ -379,6 +404,7 @@
     <nav id="nav-container"></nav>
 
     <main class="container">
+      <!-- DASHBOARD DUEL -->
       <section id="tab-dash">
         <div class="card leader-card">
           <div class="leader-badge">👑 EN TÊTE CETTE SEMAINE</div>
@@ -398,32 +424,90 @@
           <div id="diff-text-container" style="font-size: 0.9rem; color:var(--text-muted);"></div>
         </div>
 
-        <!-- Espace réservé uniquement aux parents -->
         <div class="card" id="admin-reset-card" style="display: none; border-color:#DC2626;">
-          <h4 style="color:#DC2626;margin-bottom:8px;">⚙️ Gestion Parents</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px; margin-bottom: 12px;">
+          <h4 style="color:#DC2626;margin-bottom:8px;">⚙️ Clôtures Parents</h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <button type="button" class="btn-submit" style="background:#2563EB;" onclick="closeWeek()">🔒 Clôturer Semaine</button>
             <button type="button" class="btn-submit" style="background:#059669;" onclick="payKids()">💶 Payer Enfants</button>
           </div>
-          <button type="button" onclick="changePinPrompt()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;text-decoration:underline;cursor:pointer;width:100%;text-align:center;">Modifier mon code PIN Parent</button>
         </div>
       </section>
 
+      <!-- SECTIONS DYNAMIQUES DES ENFANTS -->
       <div id="dynamic-kids-sections"></div>
 
+      <!-- SECTION MISSIONS BONUS (DYNAMIQUE) -->
       <section id="tab-bonus" style="display: none;">
         <div class="card">
-          <h3 style="margin-bottom:12px;">⭐ Missions Bonus (+1,00 €)</h3>
+          <h3 style="margin-bottom:12px;">⭐ Missions Bonus</h3>
           <div class="field">
             <label>Pour :</label>
             <select id="bonus-assign" class="mobile-select"></select>
           </div>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Faire une lessive')">🧺 Faire une lessive (+1.00 €)</button>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Balayer extérieurs')">🧹 Balayer extérieurs (+1.00 €)</button>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Passer aspirateur')">✨ Passer l'aspirateur (+1.00 €)</button>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Nettoyer baie vitrée')">🪟 Nettoyer baie vitrée (+1.00 €)</button>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Préparer un repas')">🍳 Préparer un repas (+1.00 €)</button>
-          <button type="button" class="btn-bonus-card" onclick="addBonus('Vider les poubelles')">🗑️ Vider les poubelles (+1.00 €)</button>
+          <div id="bonus-buttons-list" class="bonus-grid"></div>
+        </div>
+      </section>
+
+      <!-- NOUVELLE SECTION : GESTION DES TÂCHES ET BONUS (RÉSERVÉE PARENT) -->
+      <section id="tab-settings" style="display: none;">
+        <!-- 1. Gestion des tâches quotidiennes -->
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+            <h3>📅 Tâches Quotidiennes</h3>
+          </div>
+          
+          <div style="background:var(--bg);padding:12px;border-radius:12px;margin-bottom:14px;border:1px solid var(--border);">
+            <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Ajouter une tâche :</p>
+            <div class="field" style="margin-bottom:8px;">
+              <select id="cfg-task-kid" class="mobile-select"></select>
+            </div>
+            <div class="field" style="margin-bottom:8px;">
+              <select id="cfg-task-day" class="mobile-select">
+                <option value="Lundi">Lundi</option>
+                <option value="Mardi">Mardi</option>
+                <option value="Mercredi">Mercredi</option>
+                <option value="Jeudi">Jeudi</option>
+                <option value="Vendredi">Vendredi</option>
+                <option value="Samedi">Samedi</option>
+                <option value="Dimanche">Dimanche</option>
+              </select>
+            </div>
+            <div class="field" style="margin-bottom:8px;">
+              <input type="text" id="cfg-task-name" placeholder="Ex: Mettre la table, Ranger chambre...">
+            </div>
+            <button type="button" class="btn-submit" onclick="addCustomTask()">Ajouter au planning</button>
+          </div>
+
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Tâches existantes :</p>
+          <div id="cfg-existing-tasks"></div>
+        </div>
+
+        <!-- 2. Gestion des missions bonus et montants -->
+        <div class="card">
+          <h3>💰 Missions Bonus & Rémunérations</h3>
+          
+          <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0 14px;border:1px solid var(--border);">
+            <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Créer un nouveau bonus :</p>
+            <div style="display:flex;gap:8px;margin-bottom:8px;">
+              <input type="text" id="cfg-bonus-icon" placeholder="Emoji (ex: 🧹)" style="width:70px;text-align:center;">
+              <input type="text" id="cfg-bonus-title" placeholder="Titre (ex: Laver la voiture)" style="flex:1;">
+            </div>
+            <div class="field" style="margin-bottom:8px;">
+              <label>Rémunération en euros (€) :</label>
+              <input type="number" id="cfg-bonus-amount" step="0.50" min="0.10" value="1.00">
+            </div>
+            <button type="button" class="btn-submit" onclick="addCustomBonus()">Créer cette mission bonus</button>
+          </div>
+
+          <p style="font-size:0.85rem;color:var(--text-muted);margin-bottom:8px;">Missions configurées :</p>
+          <div id="cfg-existing-bonuses"></div>
+        </div>
+
+        <!-- 3. Sécurité PIN -->
+        <div class="card">
+          <h3>🔒 Sécurité</h3>
+          <p style="font-size:0.85rem;color:var(--text-muted);margin:6px 0 12px;">Modifiez le code à 4 chiffres d'accès à cet espace :</p>
+          <button type="button" class="btn-submit" style="background:var(--header-bg);" onclick="changePinPrompt()">Modifier mon Code PIN</button>
         </div>
       </section>
     </main>
@@ -442,6 +526,16 @@
     let currentRole = null;
     let children = [];
     let tasks = [];
+    let bonusTemplates = [];
+
+    const DEFAULT_BONUSES = [
+      { title: "Faire une lessive", icon: "🧺", reward_amount: 1.00 },
+      { title: "Balayer les extérieurs", icon: "🧹", reward_amount: 1.00 },
+      { title: "Passer l'aspirateur", icon: "✨", reward_amount: 1.00 },
+      { title: "Nettoyer la baie vitrée", icon: "🪟", reward_amount: 1.00 },
+      { title: "Préparer un repas", icon: "🍳", reward_amount: 1.00 },
+      { title: "Vider les poubelles", icon: "🗑️", reward_amount: 1.00 }
+    ];
 
     const CHORES = [
       ["Mettre la table", "Vider le lave-vaisselle"],
@@ -515,7 +609,17 @@
         showSetup();
       } else {
         children = k;
+        await ensureBonusTemplates();
         showProfiles();
+      }
+    }
+
+    // Initialise les bonus par défaut si la famille n'en a pas encore
+    async function ensureBonusTemplates() {
+      const { data: existing } = await sb.from('bonus_templates').select('*').eq('family_id', currentFamily.id);
+      if (!existing || existing.length === 0) {
+        const toAdd = DEFAULT_BONUSES.map(b => ({ ...b, family_id: currentFamily.id }));
+        await sb.from('bonus_templates').insert(toAdd);
       }
     }
 
@@ -551,6 +655,7 @@
       const { data: createdKids } = await sb.from('children').insert(toInsert).select();
       children = createdKids;
 
+      // Création des tâches quotidiennes de départ
       const tasksToInsert = [];
       createdKids.forEach((k, kidIdx) => {
         DAYS.forEach((day, dIdx) => {
@@ -567,6 +672,7 @@
         });
       });
       await sb.from('tasks').insert(tasksToInsert);
+      await ensureBonusTemplates();
 
       document.getElementById('setup-screen').style.display = 'none';
       showProfiles();
@@ -586,7 +692,6 @@
       `).join('');
     }
 
-    // GESTION DU CODE PIN PARENT
     function openPinModal() {
       const modal = document.getElementById('pin-modal');
       const field = document.getElementById('pin-input-field');
@@ -597,9 +702,7 @@
       setTimeout(() => field.focus(), 100);
 
       field.onkeyup = (e) => {
-        if (e.key === 'Enter' || field.value.length === 4) {
-          verifyPin();
-        }
+        if (e.key === 'Enter' || field.value.length === 4) verifyPin();
       };
     }
 
@@ -625,7 +728,7 @@
       const newPin = prompt("Entrez votre nouveau code PIN à 4 chiffres :");
       if (!newPin) return;
       if (!/^\d{4}$/.test(newPin)) {
-        return alert("Le code PIN doit comporter exactement 4 chiffres (ex: 1234).");
+        return alert("Le code PIN doit comporter exactement 4 chiffres.");
       }
 
       const { error } = await sb.from('families').update({ parent_pin: newPin }).eq('id', currentFamily.id);
@@ -672,7 +775,6 @@
 
       children.forEach(k => {
         bSelect.innerHTML += `<option value="${k.id}">${k.name}</option>`;
-        // L'enfant ne voit QUE son planning, le parent voit tout
         if (currentRole === 'admin' || currentRole === k.id) {
           nav.innerHTML += `<button type="button" class="nav-tab" onclick="tab('kid-${k.id}', this)">👦 ${k.name}</button>`;
         }
@@ -688,12 +790,18 @@
 
       if (currentRole !== 'admin') {
         bSelect.value = currentRole;
-        bSelect.disabled = true; // L'enfant ne peut pas attribuer un bonus à un autre
+        bSelect.disabled = true;
       } else {
         bSelect.disabled = false;
       }
 
       nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'bonus\', this)">⭐ Bonus</button>';
+
+      // Onglet Réglages pour l'administrateur
+      if (currentRole === 'admin') {
+        nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'settings\', this)">⚙️ Réglages</button>';
+        populateSettingsDropdowns();
+      }
     }
 
     function tab(id, btn) {
@@ -702,6 +810,8 @@
       document.querySelectorAll('main > section, #dynamic-kids-sections > section').forEach(s => s.style.display = 'none');
       const target = document.getElementById(`tab-${id}`);
       if (target) target.style.display = 'block';
+
+      if (id === 'settings') renderSettings();
     }
 
     async function fetchData() {
@@ -709,6 +819,9 @@
       if (k) children = k;
       const { data: t } = await sb.from('tasks').select('*').eq('family_id', currentFamily.id);
       if (t) tasks = t;
+      const { data: b } = await sb.from('bonus_templates').select('*').eq('family_id', currentFamily.id);
+      if (b) bonusTemplates = b;
+      
       render();
     }
 
@@ -719,18 +832,129 @@
       await sb.from('tasks').update({ status_completed: val }).eq('id', id);
     }
 
-    async function addBonus(name) {
+    // Ajout d'un bonus selon sa valeur dynamique en €
+    async function addBonus(bonusId) {
+      const bTemplate = bonusTemplates.find(b => b.id === bonusId);
+      if (!bTemplate) return;
+
       const kId = document.getElementById('bonus-assign').value;
       const kid = children.find(c => c.id === kId);
       if (!kid) return;
 
-      const newW = Number((Number(kid.bonus_wallet || 0) + 1.00).toFixed(2));
+      const reward = Number(bTemplate.reward_amount || 1.00);
+      const newW = Number((Number(kid.bonus_wallet || 0) + reward).toFixed(2));
       kid.bonus_wallet = newW;
       render();
       await sb.from('children').update({ bonus_wallet: newW }).eq('id', kId);
-      alert(`+1,00 € pour ${kid.name} (${name}) !`);
+      alert(`+${reward.toFixed(2)} € pour ${kid.name} (${bTemplate.title}) ! ⭐`);
     }
 
+    // --- FONCTIONS DE PERSONNALISATION DES PARENTS ---
+
+    function populateSettingsDropdowns() {
+      const sel = document.getElementById('cfg-task-kid');
+      if (sel) {
+        sel.innerHTML = children.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+      }
+    }
+
+    async function addCustomTask() {
+      const kidId = document.getElementById('cfg-task-kid').value;
+      const day = document.getElementById('cfg-task-day').value;
+      const name = document.getElementById('cfg-task-name').value.trim();
+
+      if (!name) return alert("Veuillez saisir un nom de tâche.");
+
+      const newTask = {
+        family_id: currentFamily.id,
+        child_id: kidId,
+        task_name: name,
+        day_of_week: day,
+        status_completed: false
+      };
+
+      const { data, error } = await sb.from('tasks').insert([newTask]).select();
+      if (error) return alert("Erreur d'ajout : " + error.message);
+
+      tasks.push(data[0]);
+      document.getElementById('cfg-task-name').value = '';
+      render();
+      renderSettings();
+      alert("Tâche quotidienne ajoutée !");
+    }
+
+    async function deleteTask(taskId) {
+      if (!confirm("Supprimer cette tâche quotidienne ?")) return;
+      await sb.from('tasks').delete().eq('id', taskId);
+      tasks = tasks.filter(t => t.id !== taskId);
+      render();
+      renderSettings();
+    }
+
+    async function addCustomBonus() {
+      let icon = document.getElementById('cfg-bonus-icon').value.trim() || '⭐';
+      const title = document.getElementById('cfg-bonus-title').value.trim();
+      const amount = parseFloat(document.getElementById('cfg-bonus-amount').value) || 1.00;
+
+      if (!title) return alert("Veuillez saisir un titre pour la mission bonus.");
+
+      const newBonus = {
+        family_id: currentFamily.id,
+        title: title,
+        icon: icon,
+        reward_amount: amount
+      };
+
+      const { data, error } = await sb.from('bonus_templates').insert([newBonus]).select();
+      if (error) return alert("Erreur : " + error.message);
+
+      bonusTemplates.push(data[0]);
+      document.getElementById('cfg-bonus-title').value = '';
+      render();
+      renderSettings();
+      alert("Mission bonus enregistrée !");
+    }
+
+    async function deleteBonus(bonusId) {
+      if (!confirm("Supprimer cette mission bonus ?")) return;
+      await sb.from('bonus_templates').delete().eq('id', bonusId);
+      bonusTemplates = bonusTemplates.filter(b => b.id !== bonusId);
+      render();
+      renderSettings();
+    }
+
+    function renderSettings() {
+      // 1. Liste des tâches
+      const taskDiv = document.getElementById('cfg-existing-tasks');
+      if (taskDiv) {
+        taskDiv.innerHTML = tasks.map(t => {
+          const kid = children.find(c => c.id === t.child_id);
+          return `
+            <div class="config-table-row">
+              <div>
+                <strong>${kid ? kid.name : '?'}</strong> (${t.day_of_week}) : <span>${t.task_name}</span>
+              </div>
+              <button type="button" class="btn-del" onclick="deleteTask('${t.id}')">✕</button>
+            </div>
+          `;
+        }).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche configurée.</p>';
+      }
+
+      // 2. Liste des bonus
+      const bonusDiv = document.getElementById('cfg-existing-bonuses');
+      if (bonusDiv) {
+        bonusDiv.innerHTML = bonusTemplates.map(b => `
+          <div class="config-table-row">
+            <div>
+              <span>${b.icon}</span> <strong>${b.title}</strong> — <span style="color:#059669;font-weight:700;">+${Number(b.reward_amount).toFixed(2)} €</span>
+            </div>
+            <button type="button" class="btn-del" onclick="deleteBonus('${b.id}')">✕</button>
+          </div>
+        `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun bonus configuré.</p>';
+      }
+    }
+
+    // Rendu global
     function render() {
       const stats = children.map(k => {
         const kTasks = tasks.filter(t => t.child_id === k.id);
@@ -779,18 +1003,18 @@
         <p>• <strong>${s.name}</strong> : ${s.delta >= 0 ? '+' : ''}${s.delta.toFixed(2)} € sur la cagnotte.</p>
       `).join('');
 
+      // Listes de tâches par enfant
       children.forEach(k => {
         const div = document.getElementById(`t-list-${k.id}`);
         if (div) {
           const kTasks = tasks.filter(t => t.child_id === k.id);
           div.innerHTML = kTasks.map(t => {
-            // Un enfant ne peut cocher QUE ses propres tâches (sécurité UI)
             const canEdit = (currentRole === 'admin' || currentRole === k.id);
             return `
               <div class="task-row">
-                <div>
+                <div class="task-meta">
                   <strong>${t.day_of_week}</strong>
-                  <span style="font-size:0.85rem;color:var(--text-muted);display:block;">${t.task_name}</span>
+                  <span style="font-size:0.85rem;color:var(--text-muted);">${t.task_name}</span>
                 </div>
                 <label class="switch">
                   <input type="checkbox" ${t.status_completed ? 'checked' : ''} ${canEdit ? '' : 'disabled'} onchange="toggleTask('${t.id}', this.checked)">
@@ -798,9 +1022,23 @@
                 </label>
               </div>
             `;
-          }).join('');
+          }).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0;">Aucune tâche pour le moment.</p>';
         }
       });
+
+      // Boutons bonus dynamiques
+      const bContainer = document.getElementById('bonus-buttons-list');
+      if (bContainer) {
+        bContainer.innerHTML = bonusTemplates.map(b => `
+          <button type="button" class="btn-bonus-card" onclick="addBonus('${b.id}')">
+            <div class="bonus-icon-box">${b.icon || '⭐'}</div>
+            <div>
+              <strong>${b.title}</strong>
+              <small style="display:block;color:#059669;font-weight:700;">+${Number(b.reward_amount).toFixed(2)} €</small>
+            </div>
+          </button>
+        `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun bonus disponible.</p>';
+      }
     }
 
     async function closeWeek() {
