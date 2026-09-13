@@ -318,7 +318,7 @@
 </head>
 <body data-theme="ios">
 
-  <!-- 0. ÉCRAN DE CHARGEMENT RAPIDE (Évite le flash du login à l'actualisation) -->
+  <!-- 0. ÉCRAN DE CHARGEMENT RAPIDE -->
   <div id="splash-screen">
     <div class="login-box" style="text-align: center; padding: 40px 20px;">
       <h2>⚔️ Fratricide</h2>
@@ -371,7 +371,7 @@
     </div>
   </div>
 
-  <!-- 2. SÉLECTION PROFIL -->
+  <!-- 2. SÉLECTION DU PROFIL -->
   <div id="profile-select-screen" style="display: none;">
     <div class="login-box" style="text-align: center;">
       <h2 id="family-title-banner">La Fratrie</h2>
@@ -475,7 +475,7 @@
         </div>
       </section>
 
-      <!-- MODE DUO (+18) SECRÈTEMENT RÉSERVÉ AUX PARENTS -->
+      <!-- MODE DUO (+18) -->
       <section id="tab-duo" style="display: none;">
         <div class="couple-bank-grid">
           <div class="couple-bank-card">
@@ -509,7 +509,7 @@
         </div>
       </section>
 
-      <!-- RÉGLAGES ET PERSONNALISATION (ADMIN) -->
+      <!-- RÉGLAGES ET PARAMÈTRES (ADMIN) -->
       <section id="tab-settings" style="display: none;">
         <div class="card" style="border: 2px solid #FB7185;">
           <h3 style="color:#E11D48;">🌶️ Paramètres Duo / Couple</h3>
@@ -693,7 +693,7 @@
         if (fErr) throw fErr;
 
         currentFamily = fam;
-        localStorage.setItem('fratricide_saved_email', email);
+        localStorage.setItem('fratricide_family_data', JSON.stringify(fam));
         showSetup();
       } catch (err) {
         status.style.color = '#DC2626';
@@ -718,7 +718,7 @@
         if (fErr) throw fErr;
 
         currentFamily = fam;
-        localStorage.setItem('fratricide_saved_email', email);
+        localStorage.setItem('fratricide_family_data', JSON.stringify(fam));
         await checkKids();
       } catch (err) {
         status.style.color = '#DC2626';
@@ -868,6 +868,7 @@
       if (error) alert("Erreur : " + error.message);
       else {
         currentFamily.parent_pin = newPin;
+        localStorage.setItem('fratricide_family_data', JSON.stringify(currentFamily));
         alert("Nouveau code PIN enregistré !");
       }
     }
@@ -1089,6 +1090,7 @@
       duoConfig.p2_name = p2;
 
       await sb.from('couple_config').update({ p1_name: p1, p2_name: p2 }).eq('id', duoConfig.id);
+      localStorage.setItem('fratricide_family_data', JSON.stringify(currentFamily));
       alert("Noms du couple mis à jour !");
       renderDuoView();
     }
@@ -1364,57 +1366,35 @@
       alert("Cagnottes remises à 0 € !");
     }
 
-    function setTheme(t) { document.body.setAttribute('data-theme', t); }
+    function setTheme(t) { 
+      document.body.setAttribute('data-theme', t); 
+      localStorage.setItem('fratricide_theme', t);
+    }
 
     async function doLogout() {
-      localStorage.removeItem('fratricide_saved_email');
+      localStorage.removeItem('fratricide_family_data');
       if (sb) await sb.auth.signOut();
       location.reload();
     }
 
-    // RESTAURATION FIABILISÉE SANS FLASH NI DEMANDE DE MOT DE PASSE
+    // RESTAURATION INSTANTANÉE DEPUIS LE LOCALSTORAGE
     document.addEventListener('DOMContentLoaded', async () => {
       const savedTheme = localStorage.getItem('fratricide_theme') || 'ios';
       setTheme(savedTheme);
 
-      const savedEmail = localStorage.getItem('fratricide_saved_email');
+      const rawFamily = localStorage.getItem('fratricide_family_data');
 
-      if (!sb) {
-        showLoginScreen();
-        return;
+      if (rawFamily) {
+        try {
+          currentFamily = JSON.parse(rawFamily);
+          await checkKids();
+          return;
+        } catch (e) {
+          localStorage.removeItem('fratricide_family_data');
+        }
       }
 
-      try {
-        let activeEmail = savedEmail;
-
-        // 1. Vérifie si Supabase a la session
-        const { data: { session } } = await sb.auth.getSession();
-        if (session && session.user) {
-          activeEmail = session.user.email;
-          localStorage.setItem('fratricide_saved_email', activeEmail);
-        }
-
-        // 2. Si un email de famille est mémorisé, on charge directement les données
-        if (activeEmail) {
-          const { data: fam, error } = await sb
-            .from('families')
-            .select('*')
-            .eq('parent_email', activeEmail)
-            .single();
-
-          if (fam && !error) {
-            currentFamily = fam;
-            await checkKids();
-            return;
-          }
-        }
-
-        // Aucun utilisateur mémorisé -> afficher le login
-        showLoginScreen();
-      } catch (err) {
-        console.warn("Erreur auto-login :", err);
-        showLoginScreen();
-      }
+      showLoginScreen();
     });
   </script>
 </body>
