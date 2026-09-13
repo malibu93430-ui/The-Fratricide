@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Fratricide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body data-theme="ios">
+
+  <!-- Écran de Connexion -->
+  <div id="login-screen">
+    <div class="login-box">
+      <h2>⚔️ Fratricide</h2>
+      <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 24px;">Le duel des tâches du mois</p>
+      
+      <div class="field">
+        <label for="username">Profil</label>
+        <input type="text" id="username" placeholder="admin, noah ou noelia" autocapitalize="none">
+      </div>
+      <div class="field">
+        <label for="password">Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••">
+      </div>
+      <button type="button" class="btn-submit" onclick="login()">Entrer dans l'arène 🚀</button>
+    </div>
+  </div>
+
+  <!-- Application Principale -->
+  <div id="app" style="display: none;">
+    <header>
+      <div class="brand">
+        <h3>⚔️ Fratricide</h3>
+        <span class="badge-sync" id="sync-indicator">Synchronisé</span>
+      </div>
+      <div class="header-actions">
+        <div class="theme-selector">
+          <button type="button" class="theme-btn" onclick="setTheme('ios')" title="Thème iOS Épuré">🍏</button>
+          <button type="button" class="theme-btn" onclick="setTheme('cyber')" title="Thème Cyber Gaming">🎮</button>
+          <button type="button" class="theme-btn" onclick="setTheme('pop')" title="Thème Néo-Pop">⚡</button>
+        </div>
+        <span id="user-tag"></span>
+        <button type="button" class="btn-logout" onclick="logout()">Sortir</button>
+      </div>
+    </header>
+
+    <nav id="nav-container"></nav>
+
+    <main class="container">
+      <!-- Dashboard & Duel -->
+      <section id="tab-dash">
+        <div class="card leader-card" id="leader-card">
+          <div class="leader-badge">👑 EN TÊTE DU MOIS</div>
+          <div class="leader-content">
+            <img id="leader-photo" class="leader-avatar" src="noah.PNG" alt="Leader" onerror="this.onerror=null; this.src='https://api.dicebear.com/7.x/bottts/svg?seed=duel';">
+            <div>
+              <h2 id="leader-name">Noah</h2>
+              <p id="leader-desc" style="color: var(--text-muted); font-size: 0.9rem;"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="duel-grid">
+          <div class="kid-box noah">
+            <div class="kid-head">
+              <h3>👦 Noah</h3>
+              <span class="pill-pts"><strong id="d-noah-pts">0.0</strong> pts</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Bonus bruts : <strong id="d-noah-bonus">0.00</strong> €</p>
+            <div class="final-box">
+              Porte-monnaie net : <strong id="d-noah-final" style="color: var(--noah-accent);">0.00 €</strong>
+            </div>
+          </div>
+
+          <div class="kid-box noelia">
+            <div class="kid-head">
+              <h3>👧 Noélia</h3>
+              <span class="pill-pts"><strong id="d-noelia-pts">0.0</strong> pts</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Bonus bruts : <strong id="d-noelia-bonus">0.00</strong> €</p>
+            <div class="final-box">
+              Porte-monnaie net : <strong id="d-noelia-final" style="color: var(--noelia-accent);">0.00 €</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="card info-banner">
+          <h4 style="margin-bottom: 4px;">⚖️ Péréquation des cagnottes :</h4>
+          <p id="diff-text" style="font-size: 0.9rem;"></p>
+        </div>
+
+        <!-- Actions Admin -->
+        <div class="card reset-card" id="admin-reset-card" style="display: none;">
+          <h4 style="color: #DC2626; margin-bottom: 4px;">⚙️ Gestion Parents</h4>
+          <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-muted);">Clôture hebdomadaire et versement de l'argent de poche :</p>
+          <div class="admin-actions-grid">
+            <button type="button" class="btn-admin-action btn-cloture" onclick="closeWeek()">
+              🔒 Clôturer la semaine
+              <small>Fige le vol & remet le quotidien à 0</small>
+            </button>
+            <button type="button" class="btn-admin-action btn-payer" onclick="payKids()">
+              💶 Payer les enfants
+              <small>Remet le porte-monnaie à 0 €</small>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Planning Noah -->
+      <section id="tab-noah" style="display: none;">
+        <div class="card">
+          <div class="section-title">
+            <h3>👦 Planning Noah</h3>
+            <span class="badge-rule">0,5 pt / tâche</span>
+          </div>
+          <div id="noah-tasks"></div>
+        </div>
+      </section>
+
+      <!-- Planning Noélia -->
+      <section id="tab-noelia" style="display: none;">
+        <div class="card">
+          <div class="section-title">
+            <h3>👧 Planning Noélia</h3>
+            <span class="badge-rule">0,5 pt / tâche</span>
+          </div>
+          <div id="noelia-tasks"></div>
+        </div>
+      </section>
+
+      <!-- Tâches Bonus (avec les poubelles incluses) -->
+      <section id="tab-bonus" style="display: none;">
+        <div class="card">
+          <div class="section-title">
+            <h3>⭐ Missions Bonus (+1,00 €)</h3>
+          </div>
+          
+          <div class="field" style="margin: 14px 0;">
+            <label for="bonus-assign">Attribuer la mission à :</label>
+            <select id="bonus-assign" class="mobile-select">
+              <option value="Noah">Noah</option>
+              <option value="Noélia">Noélia</option>
+            </select>
+          </div>
+
+          <div class="bonus-grid">
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Faire une lessive')">
+              <div class="bonus-icon-box">🧺</div>
+              <div>
+                <strong>Faire une lessive</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Balayer les exterieurs')">
+              <div class="bonus-icon-box">🧹</div>
+              <div>
+                <strong>Balayer extérieurs</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Passer l aspirateur')">
+              <div class="bonus-icon-box">✨</div>
+              <div>
+                <strong>Passer l'aspirateur</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Nettoyer la baie vitree')">
+              <div class="bonus-icon-box">🪟</div>
+              <div>
+                <strong>Nettoyer baie vitrée</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Preparer un repas')">
+              <div class="bonus-icon-box">🍳</div>
+              <div>
+                <strong>Préparer un repas</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+            <button type="button" class="btn-bonus-card" onclick="submitBonus('Vider les poubelles')">
+              <div class="bonus-icon-box">🗑️</div>
+              <div>
+                <strong>Vider les poubelles</strong>
+                <small>+1.00 €</small>
+              </div>
+            </button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="./script.js"></script>
+</body>
+</html>
