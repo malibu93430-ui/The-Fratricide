@@ -295,7 +295,6 @@
       font-size: 0.8rem;
     }
 
-    /* DUO / COUPLE (+18) */
     .couple-bank-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -424,7 +423,7 @@
     <nav id="nav-container"></nav>
 
     <main class="container">
-      <!-- 1. DASHBOARD DUEL ENFANTS -->
+      <!-- DASHBOARD DUEL -->
       <section id="tab-dash">
         <div class="card leader-card">
           <div class="leader-badge">👑 EN TÊTE CETTE SEMAINE</div>
@@ -453,9 +452,10 @@
         </div>
       </section>
 
+      <!-- PLANNINGS INDIVIDUELS DES ENFANTS -->
       <div id="dynamic-kids-sections"></div>
 
-      <!-- 2. MISSIONS BONUS ENFANTS -->
+      <!-- MISSIONS BONUS ENFANTS -->
       <section id="tab-bonus" style="display: none;">
         <div class="card">
           <h3 style="margin-bottom:12px;">⭐ Missions Bonus</h3>
@@ -467,9 +467,8 @@
         </div>
       </section>
 
-      <!-- 3. NOUVEAU : MODE DUO (+18) INVISIBLE AUX ENFANTS -->
+      <!-- MODE DUO (+18) SECRÈTEMENT RÉSERVÉ AUX PARENTS -->
       <section id="tab-duo" style="display: none;">
-        <!-- Banques de points des deux parents -->
         <div class="couple-bank-grid">
           <div class="couple-bank-card">
             <strong id="duo-p1-label" style="font-size:1.05rem;">Papa</strong>
@@ -483,37 +482,30 @@
           </div>
         </div>
 
-        <!-- Donner des points pour une attention -->
         <div class="card" style="border-color:#FB7185;">
           <h3 style="color:#E11D48;margin-bottom:8px;">💝 Récompenser une attention</h3>
           <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px;">Qui a eu une attention et reçoit des points ?</p>
-          
           <div class="field">
             <select id="duo-give-to" class="mobile-select"></select>
           </div>
-
           <div id="duo-actions-list" class="bonus-grid"></div>
         </div>
 
-        <!-- Dépenser ses points (Boutique de récompenses) -->
         <div class="card" style="border-color:#F43F5E;">
           <h3 style="color:#E11D48;margin-bottom:8px;">🥂 Réclamer une Récompense</h3>
           <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:12px;">Qui s'offre une récompense avec ses points ?</p>
-          
           <div class="field">
             <select id="duo-spend-who" class="mobile-select"></select>
           </div>
-
           <div id="duo-rewards-list" class="bonus-grid"></div>
         </div>
       </section>
 
-      <!-- 4. RÉGLAGES PARENTS (TÂCHES, BONUS & DUO) -->
+      <!-- RÉGLAGES ET PERSONNALISATION (ADMIN) -->
       <section id="tab-settings" style="display: none;">
-        <!-- Personnalisation Mode Duo -->
+        <!-- Paramètres Duo -->
         <div class="card" style="border: 2px solid #FB7185;">
           <h3 style="color:#E11D48;">🌶️ Paramètres Duo / Couple</h3>
-          
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
             <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">Noms du duo :</p>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
@@ -523,12 +515,11 @@
             <button type="button" class="btn-submit" style="background:#E11D48;" onclick="saveDuoNames()">Sauvegarder les Noms</button>
           </div>
 
-          <!-- Créer une attention -->
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin-bottom:12px;border:1px solid var(--border);">
             <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Nouvelle attention (+ points) :</p>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
               <input type="text" id="cfg-action-icon" placeholder="Emoji" style="width:65px;text-align:center;">
-              <input type="text" id="cfg-action-title" placeholder="Titre (ex: Petit déj au lit, Café servi...)" style="flex:1;">
+              <input type="text" id="cfg-action-title" placeholder="Titre (ex: Petit déj servi...)" style="flex:1;">
             </div>
             <div class="field" style="margin-bottom:8px;">
               <label>Points attribués :</label>
@@ -538,12 +529,11 @@
           </div>
           <div id="cfg-existing-actions" style="margin-bottom:14px;"></div>
 
-          <!-- Créer une récompense -->
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin-bottom:12px;border:1px solid var(--border);">
             <p style="font-size:0.85rem;font-weight:800;margin-bottom:8px;">➕ Nouvelle récompense (- points) :</p>
             <div style="display:flex;gap:8px;margin-bottom:8px;">
               <input type="text" id="cfg-reward-icon" placeholder="Emoji" style="width:65px;text-align:center;">
-              <input type="text" id="cfg-reward-title" placeholder="Titre (ex: Resto, Massage, Gâterie...)" style="flex:1;">
+              <input type="text" id="cfg-reward-title" placeholder="Titre (ex: Resto, Gâterie...)" style="flex:1;">
             </div>
             <div class="field" style="margin-bottom:8px;">
               <label>Coût en points :</label>
@@ -593,7 +583,7 @@
           <div id="cfg-existing-bonuses"></div>
         </div>
 
-        <!-- Code PIN -->
+        <!-- Sécurité PIN -->
         <div class="card">
           <h3>🔒 Sécurité</h3>
           <button type="button" class="btn-submit" style="margin-top:8px;background:var(--text-muted);" onclick="changePinPrompt()">Modifier mon Code PIN</button>
@@ -617,7 +607,6 @@
     let tasks = [];
     let bonusTemplates = [];
 
-    // Données secrètes Duo
     let duoConfig = null;
     let duoActions = [];
     let duoRewards = [];
@@ -674,7 +663,7 @@
       status.innerText = 'Création du compte...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signUp({ email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signUp({ email: email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name, parent_pin: '1234' }]).select().single();
@@ -698,7 +687,7 @@
       status.innerText = 'Connexion...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email: email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').select('*').eq('parent_email', email).single();
@@ -732,7 +721,6 @@
       }
     }
 
-    // Initialisation automatique du mode duo
     async function ensureCoupleDefaults() {
       const { data: cfg } = await sb.from('couple_config').select('*').eq('family_id', currentFamily.id).single();
       if (!cfg) {
@@ -919,7 +907,6 @@
 
       nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'bonus\', this)">⭐ Bonus</button>';
 
-      // SECTIONS SECRÈTES STRICTEMENT VISIBLES UNIQUEMENT EN MODE ADMIN
       if (currentRole === 'admin') {
         nav.innerHTML += '<button type="button" class="nav-tab" style="color:#E11D48;" onclick="tab(\'duo\', this)">🔥 Duo</button>';
         nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'settings\', this)">⚙️ Réglages</button>';
@@ -981,10 +968,6 @@
       alert(`+${reward.toFixed(2)} € pour ${kid.name} (${bTemplate.title}) ! ⭐`);
     }
 
-    // ==========================================
-    // LOGIQUE SECRÈTE DU MODE DUO (+18)
-    // ==========================================
-
     function renderDuoView() {
       if (!duoConfig) return;
 
@@ -996,7 +979,6 @@
       document.getElementById('duo-p1-pts').innerText = duoConfig.p1_points || 0;
       document.getElementById('duo-p2-pts').innerText = duoConfig.p2_points || 0;
 
-      // Sélecteurs qui donne et qui dépense
       const giveSel = document.getElementById('duo-give-to');
       giveSel.innerHTML = `
         <option value="p1">Attribuer des points à ${p1}</option>
@@ -1009,7 +991,6 @@
         <option value="p2">${p2} utilise ses points</option>
       `;
 
-      // Boutons des attentions (don de points)
       document.getElementById('duo-actions-list').innerHTML = duoActions.map(a => `
         <button type="button" class="btn-bonus-card" onclick="awardDuoPoints('${a.id}')">
           <div class="bonus-icon-box">${a.icon || '✨'}</div>
@@ -1020,7 +1001,6 @@
         </button>
       `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune attention configurée.</p>';
 
-      // Boutons des récompenses (dépense de points)
       document.getElementById('duo-rewards-list').innerHTML = duoRewards.map(r => `
         <button type="button" class="btn-bonus-card" onclick="claimDuoReward('${r.id}')">
           <div class="bonus-icon-box">${r.icon || '🎁'}</div>
@@ -1032,12 +1012,11 @@
       `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune récompense configurée.</p>';
     }
 
-    // Valider une attention et créditer les points
     async function awardDuoPoints(actionId) {
       const act = duoActions.find(a => a.id === actionId);
       if (!act) return;
 
-      const target = document.getElementById('duo-give-to').value; // 'p1' ou 'p2'
+      const target = document.getElementById('duo-give-to').value;
       const targetName = target === 'p1' ? duoConfig.p1_name : duoConfig.p2_name;
       const ptsToAdd = Number(act.points_value || 5);
 
@@ -1053,18 +1032,17 @@
       alert(`🎉 +${ptsToAdd} points attribués à ${targetName} pour : "${act.title}" !`);
     }
 
-    // Réclamer un bon / récompense
     async function claimDuoReward(rewardId) {
       const rew = duoRewards.find(r => r.id === rewardId);
       if (!rew) return;
 
-      const buyer = document.getElementById('duo-spend-who').value; // 'p1' ou 'p2'
+      const buyer = document.getElementById('duo-spend-who').value;
       const buyerName = buyer === 'p1' ? duoConfig.p1_name : duoConfig.p2_name;
       const currentPts = buyer === 'p1' ? (duoConfig.p1_points || 0) : (duoConfig.p2_points || 0);
       const cost = Number(rew.cost_points || 20);
 
       if (currentPts < cost) {
-        return alert(`❌ Points insuffisants ! ${buyerName} a ${currentPts} points (il en faut ${cost}). Continuez les attentions !`);
+        return alert(`❌ Points insuffisants ! ${buyerName} a ${currentPts} points (il en faut ${cost}).`);
       }
 
       if (!confirm(`Utiliser ${cost} points pour réclamer : "${rew.title}" ?`)) return;
@@ -1078,12 +1056,8 @@
         .update({ p1_points: duoConfig.p1_points, p2_points: duoConfig.p2_points })
         .eq('id', duoConfig.id);
 
-      alert(`🥂 Félicitations ! ${buyerName} débloque son bon pour : "${rew.title}". À honorer au plus vite !`);
+      alert(`🥂 Félicitations ! ${buyerName} débloque son bon pour : "${rew.title}".`);
     }
-
-    // ==========================================
-    // RÉGLAGES DUO & ENFANTS (ADMIN)
-    // ==========================================
 
     async function saveDuoNames() {
       const p1 = document.getElementById('cfg-duo-p1').value.trim() || 'Papa';
@@ -1224,7 +1198,6 @@
     }
 
     function renderSettings() {
-      // 1. Tâches
       const taskDiv = document.getElementById('cfg-existing-tasks');
       if (taskDiv) {
         taskDiv.innerHTML = tasks.map(t => {
@@ -1238,7 +1211,6 @@
         }).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche.</p>';
       }
 
-      // 2. Bonus
       const bonusDiv = document.getElementById('cfg-existing-bonuses');
       if (bonusDiv) {
         bonusDiv.innerHTML = bonusTemplates.map(b => `
@@ -1249,7 +1221,6 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun bonus.</p>';
       }
 
-      // 3. Attentions Duo
       const actDiv = document.getElementById('cfg-existing-actions');
       if (actDiv) {
         actDiv.innerHTML = duoActions.map(a => `
@@ -1260,7 +1231,6 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune attention configurée.</p>';
       }
 
-      // 4. Récompenses Duo
       const rewDiv = document.getElementById('cfg-existing-rewards');
       if (rewDiv) {
         rewDiv.innerHTML = duoRewards.map(r => `
@@ -1271,10 +1241,6 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune récompense configurée.</p>';
       }
     }
-
-    // ==========================================
-    // RENDU GLOBAL (DUEL & TÂCHES ENFANTS)
-    // ==========================================
 
     function render() {
       const stats = children.map(k => {
@@ -1378,6 +1344,32 @@
 
     function setTheme(t) { document.body.setAttribute('data-theme', t); }
     async function doLogout() { if(sb) await sb.auth.signOut(); location.reload(); }
+
+    // GESTION AUTOMATIQUE DE LA PERSISTANCE DE SESSION
+    document.addEventListener('DOMContentLoaded', async () => {
+      const savedTheme = localStorage.getItem('fratricide_theme') || 'ios';
+      setTheme(savedTheme);
+
+      if (!sb) return;
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (session && session.user) {
+          const { data: fam, error } = await sb
+            .from('families')
+            .select('*')
+            .eq('parent_email', session.user.email)
+            .single();
+
+          if (fam && !error) {
+            currentFamily = fam;
+            await checkKids();
+          }
+        }
+      } catch (err) {
+        console.warn("Session introuvable ou expirée :", err);
+      }
+    });
   </script>
 </body>
 </html>
