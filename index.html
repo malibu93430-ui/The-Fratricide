@@ -5,29 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Fratricide</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+  <!-- Chargement Supabase CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="./style.css">
 </head>
 <body data-theme="ios">
 
-  <!-- 1. ÉCRAN DE CONNEXION / INSCRIPTION -->
+  <!-- 1. Écran de Connexion / Inscription -->
   <div id="login-screen">
     <div class="login-box">
       <div class="auth-header">
         <h2>⚔️ Fratricide</h2>
-        <p style="color: var(--text-muted); font-size: 0.95rem;">Le duel des tâches du mois</p>
+        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">Le duel des tâches du mois</p>
       </div>
 
+      <!-- Onglets Mode -->
       <div class="auth-tabs">
-        <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="showAuthMode('login')">Connexion</button>
-        <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="showAuthMode('register')">Créer une famille</button>
+        <button type="button" id="tab-btn-login" class="auth-tab-btn active" onclick="switchAuthMode('login')">Connexion</button>
+        <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchAuthMode('register')">Créer une famille</button>
       </div>
 
-      <!-- Connexion -->
+      <!-- Formulaire Connexion -->
       <form id="form-login" onsubmit="handleLogin(event)">
         <div class="field">
           <label for="login-email">Email parent</label>
-          <input type="email" id="login-email" placeholder="parent@famille.fr" required autocomplete="email">
+          <input type="email" id="login-email" placeholder="exemple@famille.fr" required autocomplete="email">
         </div>
         <div class="field">
           <label for="login-password">Mot de passe</label>
@@ -36,15 +38,15 @@
         <button type="submit" class="btn-submit" id="btn-login-submit">Se connecter 🚀</button>
       </form>
 
-      <!-- Inscription -->
+      <!-- Formulaire Inscription -->
       <form id="form-register" onsubmit="handleRegister(event)" style="display: none;">
         <div class="field">
           <label for="reg-family-name">Nom de la famille</label>
-          <input type="text" id="reg-family-name" placeholder="Ex: Les Guerriers" required>
+          <input type="text" id="reg-family-name" placeholder="Ex: Famille Dupont" required>
         </div>
         <div class="field">
           <label for="reg-email">Email parent</label>
-          <input type="email" id="reg-email" placeholder="parent@famille.fr" required autocomplete="email">
+          <input type="email" id="reg-email" placeholder="exemple@famille.fr" required autocomplete="email">
         </div>
         <div class="field">
           <label for="reg-password">Mot de passe (6 car. min)</label>
@@ -57,7 +59,7 @@
     </div>
   </div>
 
-  <!-- 2. ÉCRAN DE SÉLECTION DU PROFIL (Qui utilise l'appli ?) -->
+  <!-- 2. Écran Sélection Profil -->
   <div id="profile-select-screen" style="display: none;">
     <div class="login-box" style="text-align: center;">
       <h2 id="family-title-banner">La Fratrie</h2>
@@ -72,20 +74,20 @@
     </div>
   </div>
 
-  <!-- 3. CONFIGURATION INITIALE DES ENFANTS (Si aucun enfant créé) -->
+  <!-- 3. Écran Configuration des Enfants -->
   <div id="setup-screen" style="display: none;">
     <div class="login-box" style="max-width: 500px;">
       <h2>👶 Configuration des Enfants</h2>
-      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Ajoutez au moins 2 enfants pour lancer le duel de la semaine :</p>
+      <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Ajoutez les enfants de la fratrie :</p>
       
       <div id="setup-kids-list"></div>
 
       <button type="button" class="btn-add-kid" onclick="addKidInputRow()">➕ Ajouter un autre enfant</button>
-      <button type="button" class="btn-submit" style="margin-top: 18px;" onclick="saveInitialChildren()">Enregistrer et Lancer l'Arène 🚀</button>
+      <button type="button" class="btn-submit" style="margin-top: 18px;" onclick="saveInitialChildren()">Valider & Lancer l'Arène 🚀</button>
     </div>
   </div>
 
-  <!-- 4. APPLICATION PRINCIPALE -->
+  <!-- 4. Application Principale -->
   <div id="app" style="display: none;">
     <header>
       <div class="brand">
@@ -106,10 +108,9 @@
     <nav id="nav-container"></nav>
 
     <main class="container">
-      <!-- DASHBOARD DUEL MULTI-ENFANTS -->
       <section id="tab-dash">
         <div class="card leader-card" id="leader-card">
-          <div class="leader-badge">👑 LEADER DE LA FRATRIE</div>
+          <div class="leader-badge">👑 LEADER DE LA SEMAINE</div>
           <div class="leader-content">
             <img id="leader-photo" class="leader-avatar" src="" alt="Leader" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=leader';">
             <div>
@@ -119,7 +120,6 @@
           </div>
         </div>
 
-        <!-- Grille responsive s'adaptant à 2, 3, 4 enfants ou plus -->
         <div class="duel-grid-multi" id="kids-cards-container"></div>
 
         <div class="card info-banner">
@@ -127,10 +127,9 @@
           <div id="diff-text-container" style="font-size: 0.9rem;"></div>
         </div>
 
-        <!-- Panneau Admin -->
         <div class="card reset-card" id="admin-reset-card" style="display: none;">
           <h4 style="color: #DC2626; margin-bottom: 4px;">⚙️ Gestion Parents</h4>
-          <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-muted);">Clôture hebdomadaire et versement de l'argent de poche :</p>
+          <p style="font-size: 0.8rem; margin-bottom: 12px; color: var(--text-muted);">Clôture hebdomadaire et versement :</p>
           <div class="admin-actions-grid">
             <button type="button" class="btn-admin-action btn-cloture" onclick="closeWeekMulti()">
               🔒 Clôturer la semaine
@@ -144,10 +143,8 @@
         </div>
       </section>
 
-      <!-- SECTIONS DYNAMIQUES PAR ENFANT (Générées en JS) -->
       <div id="dynamic-kids-sections"></div>
 
-      <!-- SECTION BONUS -->
       <section id="tab-bonus" style="display: none;">
         <div class="card">
           <div class="section-title">
