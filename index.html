@@ -7,7 +7,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;700&family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
-    /* VARIABLES DE STYLE ET THÈMES */
     :root, body[data-theme="ios"] {
       --bg: #F8FAFC;
       --card-bg: #FFFFFF;
@@ -61,7 +60,6 @@
     h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif; }
     body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; transition: background-color 0.25s; }
 
-    /* AUTHENTIFICATION */
     #login-screen, #profile-select-screen, #setup-screen {
       padding: 30px 14px;
       display: flex;
@@ -136,7 +134,6 @@
       min-height: 20px;
     }
 
-    /* HEADER & NAV */
     header {
       background: var(--header-bg);
       color: var(--header-text);
@@ -208,7 +205,6 @@
       color: white;
     }
 
-    /* CONTENU */
     .container { max-width: 600px; margin: 0 auto; padding: 12px; }
     .card {
       background: var(--card-bg);
@@ -233,12 +229,46 @@
     input:checked + .slider { background-color: var(--switch-on); }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* PROFILS & BONUS */
     .profiles-selection-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 14px; margin-bottom: 24px; }
     .profile-card-btn { background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-card); padding: 16px 8px; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; }
     .profile-card-avatar { width: 60px; height: 60px; border-radius: 50%; }
     .btn-admin-access { width: 100%; padding: 12px; background: transparent; border: var(--border-width) dashed var(--border); border-radius: var(--radius-btn); color: var(--text-muted); font-weight: 800; cursor: pointer; }
     .btn-bonus-card { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px; background: var(--card-bg); border: var(--border-width) solid var(--border); border-radius: var(--radius-btn); margin-bottom: 8px; cursor: pointer; color: var(--text); }
+
+    /* MODALE CODE PIN */
+    .modal-backdrop {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(4px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .pin-box {
+      width: 100%;
+      max-width: 320px;
+      background: var(--card-bg);
+      border-radius: var(--radius-card);
+      padding: 24px;
+      text-align: center;
+      border: var(--border-width) solid var(--border);
+      box-shadow: var(--shadow);
+    }
+    .pin-input {
+      letter-spacing: 12px;
+      font-size: 2rem;
+      text-align: center;
+      width: 180px;
+      margin: 16px auto;
+      padding: 8px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+    }
   </style>
 </head>
 <body data-theme="ios">
@@ -256,7 +286,6 @@
         <button type="button" id="tab-btn-register" class="auth-tab-btn" onclick="switchMode('register')">Créer une famille</button>
       </div>
 
-      <!-- Connexion -->
       <form id="form-login" onsubmit="doLogin(event)">
         <div class="field">
           <label>Email parent</label>
@@ -269,7 +298,6 @@
         <button type="submit" class="btn-submit" id="btn-login-submit">Se connecter 🚀</button>
       </form>
 
-      <!-- Inscription -->
       <form id="form-register" onsubmit="doRegister(event)" style="display: none;">
         <div class="field">
           <label>Nom de la famille</label>
@@ -290,15 +318,31 @@
     </div>
   </div>
 
-  <!-- 2. SÉLECTION PROFIL -->
+  <!-- 2. SÉLECTION DU PROFIL -->
   <div id="profile-select-screen" style="display: none;">
     <div class="login-box" style="text-align: center;">
       <h2 id="family-title-banner">La Fratrie</h2>
       <p style="color: var(--text-muted); margin: 6px 0 20px;">Qui utilise l'application ?</p>
       <div id="profiles-grid" class="profiles-selection-grid"></div>
-      <button type="button" class="btn-admin-access" onclick="selectRole('admin')">⚙️ Espace Parents</button>
+      
+      <!-- Bouton Espace Parents qui déclenche la modale PIN -->
+      <button type="button" class="btn-admin-access" onclick="openPinModal()">🔒 Espace Parents (Gestion)</button>
       <div style="margin-top: 14px;">
         <button type="button" onclick="doLogout()" style="background:none;border:none;color:var(--text-muted);text-decoration:underline;cursor:pointer;">Changer de famille</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODALE SAISIE DU CODE PIN PARENT -->
+  <div id="pin-modal" class="modal-backdrop">
+    <div class="pin-box">
+      <h3>🔒 Code PIN Parent</h3>
+      <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">Saisissez votre code à 4 chiffres :</p>
+      <input type="password" id="pin-input-field" class="pin-input" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••" autofocus>
+      <p id="pin-error-msg" style="color: #DC2626; font-size: 0.85rem; height: 18px; margin-bottom: 12px;"></p>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-submit" style="background: var(--switch-off); color: var(--text); flex: 1;" onclick="closePinModal()">Annuler</button>
+        <button type="button" class="btn-submit" style="flex: 1;" onclick="verifyPin()">Entrer</button>
       </div>
     </div>
   </div>
@@ -354,12 +398,14 @@
           <div id="diff-text-container" style="font-size: 0.9rem; color:var(--text-muted);"></div>
         </div>
 
+        <!-- Espace réservé uniquement aux parents -->
         <div class="card" id="admin-reset-card" style="display: none; border-color:#DC2626;">
           <h4 style="color:#DC2626;margin-bottom:8px;">⚙️ Gestion Parents</h4>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px; margin-bottom: 12px;">
             <button type="button" class="btn-submit" style="background:#2563EB;" onclick="closeWeek()">🔒 Clôturer Semaine</button>
             <button type="button" class="btn-submit" style="background:#059669;" onclick="payKids()">💶 Payer Enfants</button>
           </div>
+          <button type="button" onclick="changePinPrompt()" style="background:none;border:none;color:var(--text-muted);font-size:0.8rem;text-decoration:underline;cursor:pointer;width:100%;text-align:center;">Modifier mon code PIN Parent</button>
         </div>
       </section>
 
@@ -384,7 +430,6 @@
   </div>
 
   <script>
-    // INITIALISATION SUPABASE
     const SUPABASE_URL = "https://efnqxsxdpanpcyfbwtes.supabase.co";
     const SUPABASE_KEY = "sb_publishable_m2lOIUxo6FVmufkFPjxpNA_F3XIcg90";
     let sb = null;
@@ -394,7 +439,7 @@
     }
 
     let currentFamily = null;
-    let currentRole = 'admin';
+    let currentRole = null;
     let children = [];
     let tasks = [];
 
@@ -405,7 +450,6 @@
     ];
     const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
-    // BASCULE CONNEXION / CRÉATION
     function switchMode(mode) {
       const isReg = mode === 'register';
       document.getElementById('form-login').style.display = isReg ? 'none' : 'block';
@@ -415,7 +459,6 @@
       document.getElementById('auth-status-msg').innerText = '';
     }
 
-    // INSCRIPTION
     async function doRegister(e) {
       e.preventDefault();
       const status = document.getElementById('auth-status-msg');
@@ -430,7 +473,7 @@
         const { data: auth, error: aErr } = await sb.auth.signUp({ email: email, password: pwd });
         if (aErr) throw aErr;
 
-        const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name }]).select().single();
+        const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name, parent_pin: '1234' }]).select().single();
         if (fErr) throw fErr;
 
         currentFamily = fam;
@@ -441,7 +484,6 @@
       }
     }
 
-    // CONNEXION
     async function doLogin(e) {
       e.preventDefault();
       const status = document.getElementById('auth-status-msg');
@@ -544,6 +586,57 @@
       `).join('');
     }
 
+    // GESTION DU CODE PIN PARENT
+    function openPinModal() {
+      const modal = document.getElementById('pin-modal');
+      const field = document.getElementById('pin-input-field');
+      const err = document.getElementById('pin-error-msg');
+      err.innerText = '';
+      field.value = '';
+      modal.style.display = 'flex';
+      setTimeout(() => field.focus(), 100);
+
+      field.onkeyup = (e) => {
+        if (e.key === 'Enter' || field.value.length === 4) {
+          verifyPin();
+        }
+      };
+    }
+
+    function closePinModal() {
+      document.getElementById('pin-modal').style.display = 'none';
+    }
+
+    function verifyPin() {
+      const enteredPin = document.getElementById('pin-input-field').value.trim();
+      const expectedPin = currentFamily.parent_pin || '1234';
+
+      if (enteredPin === expectedPin) {
+        closePinModal();
+        selectRole('admin');
+      } else {
+        const err = document.getElementById('pin-error-msg');
+        err.innerText = "Code PIN incorrect !";
+        document.getElementById('pin-input-field').value = '';
+      }
+    }
+
+    async function changePinPrompt() {
+      const newPin = prompt("Entrez votre nouveau code PIN à 4 chiffres :");
+      if (!newPin) return;
+      if (!/^\d{4}$/.test(newPin)) {
+        return alert("Le code PIN doit comporter exactement 4 chiffres (ex: 1234).");
+      }
+
+      const { error } = await sb.from('families').update({ parent_pin: newPin }).eq('id', currentFamily.id);
+      if (error) {
+        alert("Erreur lors du changement de PIN : " + error.message);
+      } else {
+        currentFamily.parent_pin = newPin;
+        alert("Nouveau code PIN enregistré avec succès !");
+      }
+    }
+
     function selectRole(role) {
       currentRole = role;
       document.getElementById('profile-select-screen').style.display = 'none';
@@ -579,6 +672,7 @@
 
       children.forEach(k => {
         bSelect.innerHTML += `<option value="${k.id}">${k.name}</option>`;
+        // L'enfant ne voit QUE son planning, le parent voit tout
         if (currentRole === 'admin' || currentRole === k.id) {
           nav.innerHTML += `<button type="button" class="nav-tab" onclick="tab('kid-${k.id}', this)">👦 ${k.name}</button>`;
         }
@@ -592,7 +686,13 @@
         `;
       });
 
-      if (currentRole !== 'admin') bSelect.value = currentRole;
+      if (currentRole !== 'admin') {
+        bSelect.value = currentRole;
+        bSelect.disabled = true; // L'enfant ne peut pas attribuer un bonus à un autre
+      } else {
+        bSelect.disabled = false;
+      }
+
       nav.innerHTML += '<button type="button" class="nav-tab" onclick="tab(\'bonus\', this)">⭐ Bonus</button>';
     }
 
@@ -632,7 +732,6 @@
     }
 
     function render() {
-      // Calcul assiduité & cagnottes
       const stats = children.map(k => {
         const kTasks = tasks.filter(t => t.child_id === k.id);
         const pts = kTasks.filter(t => t.status_completed).length * 0.5;
@@ -653,7 +752,6 @@
         k.delta = Number(diffSum.toFixed(2));
       });
 
-      // Leader
       const sorted = [...stats].sort((a, b) => b.pts - a.pts);
       const leader = sorted[0];
       if (leader && leader.pts > 0) {
@@ -666,7 +764,6 @@
         document.getElementById('leader-photo').src = "https://api.dicebear.com/7.x/bottts/svg?seed=duel";
       }
 
-      // Cartes Enfants
       document.getElementById('kids-cards-container').innerHTML = stats.map(s => `
         <div class="kid-box">
           <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -678,28 +775,30 @@
         </div>
       `).join('');
 
-      // Diff
       document.getElementById('diff-text-container').innerHTML = stats.map(s => `
         <p>• <strong>${s.name}</strong> : ${s.delta >= 0 ? '+' : ''}${s.delta.toFixed(2)} € sur la cagnotte.</p>
       `).join('');
 
-      // Tâches
       children.forEach(k => {
         const div = document.getElementById(`t-list-${k.id}`);
         if (div) {
           const kTasks = tasks.filter(t => t.child_id === k.id);
-          div.innerHTML = kTasks.map(t => `
-            <div class="task-row">
-              <div>
-                <strong>${t.day_of_week}</strong>
-                <span style="font-size:0.85rem;color:var(--text-muted);display:block;">${t.task_name}</span>
+          div.innerHTML = kTasks.map(t => {
+            // Un enfant ne peut cocher QUE ses propres tâches (sécurité UI)
+            const canEdit = (currentRole === 'admin' || currentRole === k.id);
+            return `
+              <div class="task-row">
+                <div>
+                  <strong>${t.day_of_week}</strong>
+                  <span style="font-size:0.85rem;color:var(--text-muted);display:block;">${t.task_name}</span>
+                </div>
+                <label class="switch">
+                  <input type="checkbox" ${t.status_completed ? 'checked' : ''} ${canEdit ? '' : 'disabled'} onchange="toggleTask('${t.id}', this.checked)">
+                  <span class="slider"></span>
+                </label>
               </div>
-              <label class="switch">
-                <input type="checkbox" ${t.status_completed ? 'checked' : ''} onchange="toggleTask('${t.id}', this.checked)">
-                <span class="slider"></span>
-              </label>
-            </div>
-          `).join('');
+            `;
+          }).join('');
         }
       });
     }
