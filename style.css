@@ -1,0 +1,418 @@
+/* ===================================================
+   VARIABLES DE BASE ET THÈMES MULTIPLES
+=================================================== */
+
+/* 1. THÈME PAR DÉFAUT : iOS ÉPURÉ (Modern Clean) */
+:root, body[data-theme="ios"] {
+  --bg: #F8FAFC;
+  --card-bg: #FFFFFF;
+  --header-bg: linear-gradient(135deg, #4338CA, #6366F1);
+  --header-text: #FFFFFF;
+  --text: #0F172A;
+  --text-muted: #64748B;
+  --border: #E2E8F0;
+  --radius-card: 20px;
+  --radius-btn: 14px;
+  --shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.06);
+  --border-width: 1px;
+  --noah-card-bg: linear-gradient(180deg, #EFF6FF, #DBEAFE);
+  --noah-border: #BFDBFE;
+  --noah-accent: #2563EB;
+  --noelia-card-bg: linear-gradient(180deg, #FDF2F8, #FCE7F3);
+  --noelia-border: #FBCFE8;
+  --noelia-accent: #DB2777;
+  --leader-bg: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  --leader-border: #F59E0B;
+  --leader-text: #92400E;
+  --switch-off: #CBD5E1;
+  --switch-on: #10B981;
+}
+
+/* 2. THÈME CYBER BATTLE (Dark Gaming / Néon) */
+body[data-theme="cyber"] {
+  --bg: #0B0F19;
+  --card-bg: #131C31;
+  --header-bg: #0F172A;
+  --header-text: #00F0FF;
+  --text: #F8FAFC;
+  --text-muted: #94A3B8;
+  --border: #1E293B;
+  --radius-card: 16px;
+  --radius-btn: 12px;
+  --shadow: 0 0 15px rgba(0, 240, 255, 0.1);
+  --border-width: 1.5px;
+  --noah-card-bg: #1E1B4B;
+  --noah-border: #6366F1;
+  --noah-accent: #38BDF8;
+  --noelia-card-bg: #4A044E;
+  --noelia-border: #F43F5E;
+  --noelia-accent: #FB7185;
+  --leader-bg: #172554;
+  --leader-border: #00F0FF;
+  --leader-text: #38BDF8;
+  --switch-off: #334155;
+  --switch-on: #00F0FF;
+}
+
+/* 3. THÈME NÉO-POP (BD / Rétro Brutalism) */
+body[data-theme="pop"] {
+  --bg: #FFFBEB;
+  --card-bg: #FFFFFF;
+  --header-bg: #FFE4E6;
+  --header-text: #18181B;
+  --text: #18181B;
+  --text-muted: #52525B;
+  --border: #18181B;
+  --radius-card: 18px;
+  --radius-btn: 14px;
+  --shadow: 4px 4px 0px #18181B;
+  --border-width: 3px;
+  --noah-card-bg: #BAE6FD;
+  --noah-border: #18181B;
+  --noah-accent: #0284C7;
+  --noelia-card-bg: #FBCFE8;
+  --noelia-border: #18181B;
+  --noelia-accent: #DB2777;
+  --leader-bg: #FEF08A;
+  --leader-border: #18181B;
+  --leader-text: #18181B;
+  --switch-off: #D4D4D8;
+  --switch-on: #4ADE80;
+}
+
+/* ===================================================
+   STYLES GÉNÉRAUX & STRUCTURE
+=================================================== */
+
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+h1, h2, h3, h4 { font-family: 'Fredoka', sans-serif; }
+body { background-color: var(--bg); color: var(--text); min-height: 100vh; padding-bottom: 70px; transition: background-color 0.25s; }
+
+header {
+  background: var(--header-bg);
+  color: var(--header-text);
+  padding: 12px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow);
+}
+.brand { display: flex; align-items: center; gap: 8px; }
+.header-actions { display: flex; align-items: center; gap: 8px; }
+#user-tag { font-weight: 800; font-size: 0.9rem; }
+.badge-sync { font-size: 0.72rem; background: rgba(0,0,0,0.15); padding: 3px 8px; border-radius: 999px; }
+
+/* Sélecteur de Thème */
+.theme-selector {
+  display: flex;
+  background: rgba(255,255,255,0.2);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+}
+body[data-theme="pop"] .theme-selector {
+  background: #FFFFFF;
+  border: 2px solid #18181B;
+}
+body[data-theme="cyber"] .theme-selector {
+  background: #1E293B;
+  border: 1px solid #334155;
+}
+.theme-btn {
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s, background 0.15s;
+}
+.theme-btn.active {
+  background: white;
+  transform: scale(1.1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+body[data-theme="cyber"] .theme-btn.active {
+  background: #00F0FF;
+}
+body[data-theme="pop"] .theme-btn.active {
+  background: #FEF08A;
+  border: 2px solid #18181B;
+}
+
+.btn-logout {
+  background: white;
+  color: #0F172A;
+  border: var(--border-width) solid var(--border);
+  padding: 5px 12px;
+  border-radius: var(--radius-btn);
+  font-weight: 800;
+  font-size: 0.8rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+body[data-theme="cyber"] .btn-logout {
+  background: #1E293B;
+  color: #F8FAFC;
+}
+
+/* Onglets Smartphone */
+nav {
+  max-width: 600px;
+  margin: 12px auto 0;
+  padding: 0 12px;
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+nav::-webkit-scrollbar { display: none; }
+.nav-tab {
+  flex: 1;
+  min-width: 80px;
+  text-align: center;
+  white-space: nowrap;
+  padding: 10px 12px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-btn);
+  background: var(--card-bg);
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: all 0.2s ease;
+}
+.nav-tab.active {
+  background: var(--noah-accent);
+  color: white;
+  transform: translateY(-2px);
+}
+body[data-theme="pop"] .nav-tab.active {
+  background: #38BDF8;
+  color: #18181B;
+}
+
+.container { max-width: 600px; margin: 0 auto; padding: 12px; }
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-card);
+  padding: 16px;
+  border: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow);
+  margin-bottom: 14px;
+}
+
+/* Login Mobile */
+#login-screen { padding: 30px 14px; margin-top: 30px; display: flex; justify-content: center; }
+.login-box {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card-bg);
+  padding: 24px;
+  border-radius: var(--radius-card);
+  border: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow);
+}
+.field { margin-bottom: 16px; }
+.field label { display: block; font-weight: 800; margin-bottom: 6px; font-size: 0.9rem; }
+.field input, .mobile-select {
+  width: 100%;
+  padding: 12px;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-btn);
+  font-size: 1rem;
+  outline: none;
+  background: var(--card-bg);
+  color: var(--text);
+}
+.btn-submit {
+  width: 100%;
+  padding: 14px;
+  background: var(--noah-accent);
+  color: white;
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-btn);
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+body[data-theme="pop"] .btn-submit {
+  background: #4ADE80;
+  color: #18181B;
+}
+
+/* Carte Podium Leader */
+.leader-card {
+  background: var(--leader-bg);
+  border: var(--border-width) solid var(--leader-border);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.leader-badge {
+  background: var(--leader-border);
+  color: white;
+  font-weight: 800;
+  font-size: 0.75rem;
+  padding: 4px 12px;
+  border-radius: 0 0 10px 10px;
+  display: inline-block;
+  margin-top: -16px;
+  margin-bottom: 10px;
+}
+body[data-theme="pop"] .leader-badge {
+  color: #18181B;
+}
+.leader-content { display: flex; align-items: center; justify-content: center; gap: 14px; }
+.leader-avatar {
+  width: 76px;
+  height: 76px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid white;
+  box-shadow: var(--shadow);
+}
+
+/* Grille Duel */
+.duel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+.kid-box {
+  padding: 14px;
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow);
+}
+.kid-box.noah { background: var(--noah-card-bg); border-color: var(--noah-border); }
+.kid-box.noelia { background: var(--noelia-card-bg); border-color: var(--noelia-border); }
+.kid-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.pill-pts {
+  background: var(--card-bg);
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  border: var(--border-width) solid var(--border);
+}
+.final-box {
+  margin-top: 8px;
+  padding: 6px 8px;
+  background: var(--card-bg);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: var(--border-width) solid var(--border);
+}
+
+.info-banner {
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--border);
+  color: var(--text-muted);
+}
+
+/* Panneau Admin */
+.reset-card { border: 2px dashed #DC2626; background: rgba(220, 38, 38, 0.05); }
+.admin-actions-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px; }
+.btn-admin-action {
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-btn);
+  padding: 12px 6px;
+  color: white;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-weight: 800;
+  font-size: 0.85rem;
+  text-align: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.1s;
+}
+.btn-admin-action:active { transform: scale(0.96); }
+.btn-cloture { background: #2563EB; }
+.btn-payer { background: #059669; }
+body[data-theme="pop"] .btn-cloture { background: #38BDF8; color: #18181B; }
+body[data-theme="pop"] .btn-payer { background: #4ADE80; color: #18181B; }
+.btn-admin-action small { font-size: 0.7rem; font-weight: 600; opacity: 0.9; }
+
+/* Tâches Quotidiennes avec Switch iOS / Gaming / Pop */
+.section-title { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.badge-rule { font-size: 0.8rem; background: rgba(0,0,0,0.05); color: var(--text-muted); padding: 4px 8px; border-radius: 8px; font-weight: 800; }
+.task-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px dashed var(--border);
+}
+.task-info strong { display: block; font-size: 0.95rem; }
+.task-info span { font-size: 0.8rem; color: var(--text-muted); font-weight: 600; }
+
+.switch {
+  position: relative; display: inline-block; width: 54px; height: 30px; flex-shrink: 0;
+}
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider {
+  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+  background-color: var(--switch-off);
+  transition: .25s ease;
+  border-radius: 34px;
+  border: var(--border-width) solid var(--border);
+}
+.slider:before {
+  position: absolute; content: ""; height: 22px; width: 22px; left: 3px; bottom: 3px;
+  background-color: white;
+  transition: .25s ease;
+  border-radius: 50%;
+  border: var(--border-width) solid var(--border);
+  box-shadow: var(--shadow);
+}
+input:checked + .slider { background-color: var(--switch-on); }
+input:checked + .slider:before { transform: translateX(22px); }
+
+/* Cartes Bonus Modernes */
+.bonus-grid { display: grid; grid-template-columns: 1fr; gap: 10px; margin-top: 10px; }
+.btn-bonus-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: var(--card-bg);
+  border: var(--border-width) solid var(--border);
+  border-radius: var(--radius-btn);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  color: var(--text);
+  transition: all 0.15s ease;
+}
+.btn-bonus-card:active { transform: scale(0.97); }
+.bonus-icon-box {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(0,0,0,0.05);
+  border: var(--border-width) solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+.btn-bonus-card strong { display: block; font-size: 0.95rem; }
+.btn-bonus-card small { color: #10B981; font-weight: 800; font-size: 0.9rem; }
+body[data-theme="cyber"] .btn-bonus-card small { color: #00F0FF; }
+body[data-theme="pop"] .btn-bonus-card small { color: #059669; }
