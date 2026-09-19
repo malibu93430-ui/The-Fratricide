@@ -314,6 +314,46 @@
       color: #E11D48;
       margin: 4px 0;
     }
+
+    /* BADGES CATALOGUE TÂCHES */
+    .catalog-chips-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .catalog-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1.5px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .catalog-chip.assigned {
+      background: rgba(37, 99, 235, 0.12);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .catalog-chip:active {
+      transform: scale(0.95);
+    }
+    .catalog-tag-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body data-theme="ios">
@@ -511,6 +551,49 @@
 
       <!-- RÉGLAGES ET PARAMÈTRES (ADMIN) -->
       <section id="tab-settings" style="display: none;">
+
+        <!-- 1. CATALOGUE UNIQUE DES TÂCHES -->
+        <div class="card" style="border: 2px solid #6366F1;">
+          <h3>📋 1. Catalogue des Tâches Quotidiennes</h3>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:4px 0 12px;">Créez chaque corvée une seule fois ici :</p>
+          
+          <div style="display:flex;gap:8px;margin-bottom:12px;">
+            <input type="text" id="cfg-template-name" placeholder="Ex: Vider le lave-vaisselle, Ranger chambre..." style="flex:1;" onkeydown="if(event.key==='Enter'){event.preventDefault();addTemplateTask();}">
+            <button type="button" class="btn-submit" style="width:auto;padding:0 18px;" onclick="addTemplateTask()">+ Ajouter</button>
+          </div>
+
+          <div style="display:flex;flex-wrap:wrap;gap:6px;" id="cfg-templates-chips"></div>
+        </div>
+
+        <!-- 2. ATTRIBUTION PAR ENFANT ET PAR JOUR (EN 1 CLIC) -->
+        <div class="card" style="border: 2px solid var(--accent);">
+          <h3>📅 2. Affecter au Planning</h3>
+          <p style="color:var(--text-muted);font-size:0.85rem;margin:4px 0 12px;">Sélectionnez l'enfant et le jour, puis cliquez sur les tâches à attribuer :</p>
+          
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
+            <div>
+              <label style="font-size:0.8rem;font-weight:800;display:block;margin-bottom:4px;">Enfant :</label>
+              <select id="cfg-task-kid" class="mobile-select" onchange="renderDayAssignmentManager()"></select>
+            </div>
+            <div>
+              <label style="font-size:0.8rem;font-weight:800;display:block;margin-bottom:4px;">Jour :</label>
+              <select id="cfg-task-day" class="mobile-select" onchange="renderDayAssignmentManager()">
+                <option value="Lundi">Lundi</option>
+                <option value="Mardi">Mardi</option>
+                <option value="Mercredi">Mercredi</option>
+                <option value="Jeudi">Jeudi</option>
+                <option value="Vendredi">Vendredi</option>
+                <option value="Samedi">Samedi</option>
+                <option value="Dimanche">Dimanche</option>
+              </select>
+            </div>
+          </div>
+
+          <strong id="day-assign-title" style="font-size:0.9rem;display:block;margin-bottom:6px;">Tâches du catalogue (cliquez pour activer/désactiver) :</strong>
+          <div id="cfg-assign-chips" class="catalog-chips-wrap"></div>
+        </div>
+
+        <!-- 3. PARAMÈTRES DUO / COUPLE -->
         <div class="card" style="border: 2px solid #FB7185;">
           <h3 style="color:#E11D48;">🌶️ Paramètres Duo / Couple</h3>
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
@@ -551,27 +634,7 @@
           <div id="cfg-existing-rewards"></div>
         </div>
 
-        <div class="card">
-          <h3>📅 Tâches Quotidiennes Enfants</h3>
-          <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
-            <div class="field" style="margin-bottom:8px;"><select id="cfg-task-kid" class="mobile-select"></select></div>
-            <div class="field" style="margin-bottom:8px;">
-              <select id="cfg-task-day" class="mobile-select">
-                <option value="Lundi">Lundi</option>
-                <option value="Mardi">Mardi</option>
-                <option value="Mercredi">Mercredi</option>
-                <option value="Jeudi">Jeudi</option>
-                <option value="Vendredi">Vendredi</option>
-                <option value="Samedi">Samedi</option>
-                <option value="Dimanche">Dimanche</option>
-              </select>
-            </div>
-            <div class="field" style="margin-bottom:8px;"><input type="text" id="cfg-task-name" placeholder="Nom de la tâche"></div>
-            <button type="button" class="btn-submit" onclick="addCustomTask()">Ajouter au planning</button>
-          </div>
-          <div id="cfg-existing-tasks"></div>
-        </div>
-
+        <!-- 4. MISSIONS BONUS ENFANTS (€) -->
         <div class="card">
           <h3>💰 Missions Bonus Enfants (€)</h3>
           <div style="background:var(--bg);padding:12px;border-radius:12px;margin:12px 0;border:1px solid var(--border);">
@@ -588,6 +651,7 @@
           <div id="cfg-existing-bonuses"></div>
         </div>
 
+        <!-- 5. SÉCURITÉ CODE PIN -->
         <div class="card">
           <h3>🔒 Sécurité</h3>
           <button type="button" class="btn-submit" style="margin-top:8px;background:var(--text-muted);" onclick="changePinPrompt()">Modifier mon Code PIN</button>
@@ -615,6 +679,7 @@
     let children = [];
     let tasks = [];
     let bonusTemplates = [];
+    let taskTemplates = [];
 
     let duoConfig = null;
     let duoActions = [];
@@ -645,11 +710,16 @@
       { title: "Vider les poubelles", icon: "🗑️", reward_amount: 1.00 }
     ];
 
-    const CHORES = [
-      ["Mettre la table", "Vider le lave-vaisselle"],
-      ["Débarrasser la table", "Remplir le lave-vaisselle"],
-      ["Ranger le salon", "Vider les poubelles"]
+    const INITIAL_DEFAULT_TEMPLATES = [
+      "Mettre la table",
+      "Débarrasser la table",
+      "Vider le lave-vaisselle",
+      "Remplir le lave-vaisselle",
+      "Ranger le salon",
+      "Sortir les poubelles",
+      "Faire son lit"
     ];
+
     const DAYS = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
 
     function hideAllScreens() {
@@ -686,7 +756,7 @@
       status.innerText = 'Création du compte...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signUp({ email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signUp({ email: email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').insert([{ parent_email: email, family_name: name, parent_pin: '1234' }]).select().single();
@@ -711,7 +781,7 @@
       status.innerText = 'Connexion...';
 
       try {
-        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email, password: pwd });
+        const { data: auth, error: aErr } = await sb.auth.signInWithPassword({ email: email, password: pwd });
         if (aErr) throw aErr;
 
         const { data: fam, error: fErr } = await sb.from('families').select('*').eq('parent_email', email).single();
@@ -734,6 +804,7 @@
         children = k;
         await ensureBonusTemplates();
         await ensureCoupleDefaults();
+        await ensureTaskTemplates();
         showProfiles();
       }
     }
@@ -742,6 +813,13 @@
       const { data: existing } = await sb.from('bonus_templates').select('*').eq('family_id', currentFamily.id);
       if (!existing || existing.length === 0) {
         await sb.from('bonus_templates').insert(DEFAULT_BONUSES.map(b => ({ ...b, family_id: currentFamily.id })));
+      }
+    }
+
+    async function ensureTaskTemplates() {
+      const { data: existing } = await sb.from('task_templates').select('*').eq('family_id', currentFamily.id);
+      if (!existing || existing.length === 0) {
+        await sb.from('task_templates').insert(INITIAL_DEFAULT_TEMPLATES.map(name => ({ name, family_id: currentFamily.id })));
       }
     }
 
@@ -792,24 +870,9 @@
       const { data: createdKids } = await sb.from('children').insert(toInsert).select();
       children = createdKids;
 
-      const tasksToInsert = [];
-      createdKids.forEach((k, kidIdx) => {
-        DAYS.forEach((day, dIdx) => {
-          const chores = CHORES[(kidIdx + dIdx) % CHORES.length];
-          chores.forEach(chore => {
-            tasksToInsert.push({
-              family_id: currentFamily.id,
-              child_id: k.id,
-              task_name: chore,
-              day_of_week: day,
-              status_completed: false
-            });
-          });
-        });
-      });
-      await sb.from('tasks').insert(tasksToInsert);
       await ensureBonusTemplates();
       await ensureCoupleDefaults();
+      await ensureTaskTemplates();
 
       showProfiles();
     }
@@ -955,6 +1018,8 @@
       if (t) tasks = t;
       const { data: b } = await sb.from('bonus_templates').select('*').eq('family_id', currentFamily.id);
       if (b) bonusTemplates = b;
+      const { data: tmpl } = await sb.from('task_templates').select('*').eq('family_id', currentFamily.id).order('name', { ascending: true });
+      if (tmpl) taskTemplates = tmpl;
       
       if (currentRole === 'admin') {
         const { data: cfg } = await sb.from('couple_config').select('*').eq('family_id', currentFamily.id).single();
@@ -1151,8 +1216,12 @@
 
     function populateSettingsDropdowns() {
       const sel = document.getElementById('cfg-task-kid');
-      if (sel) {
+      if (sel && children.length > 0) {
+        const savedKid = sel.value;
         sel.innerHTML = children.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+        if (savedKid && children.some(c => c.id === savedKid)) {
+          sel.value = savedKid;
+        }
       }
       if (duoConfig) {
         document.getElementById('cfg-duo-p1').value = duoConfig.p1_name || 'Papa';
@@ -1160,36 +1229,108 @@
       }
     }
 
-    async function addCustomTask() {
-      const kidId = document.getElementById('cfg-task-kid').value;
-      const day = document.getElementById('cfg-task-day').value;
-      const name = document.getElementById('cfg-task-name').value.trim();
+    // ==============================================================
+    // 1. CATALOGUE UNIQUE DES TÂCHES (CRÉATION UNE SEULE FOIS)
+    // ==============================================================
 
-      if (!name) return alert("Veuillez saisir un nom de tâche.");
+    async function addTemplateTask() {
+      const input = document.getElementById('cfg-template-name');
+      const name = input.value.trim();
+      if (!name) return alert("Veuillez saisir le nom d'une tâche.");
 
-      const { data, error } = await sb.from('tasks').insert([{
+      if (taskTemplates.some(t => t.name.toLowerCase() === name.toLowerCase())) {
+        return alert("Cette tâche existe déjà dans le catalogue.");
+      }
+
+      const { data, error } = await sb.from('task_templates').insert([{
         family_id: currentFamily.id,
-        child_id: kidId,
-        task_name: name,
-        day_of_week: day,
-        status_completed: false
+        name: name
       }]).select();
 
-      if (error) return alert("Erreur d'ajout : " + error.message);
+      if (error) return alert("Erreur : " + error.message);
 
-      tasks.push(data[0]);
-      document.getElementById('cfg-task-name').value = '';
-      render();
+      taskTemplates.push(data[0]);
+      taskTemplates.sort((a, b) => a.name.localeCompare(b.name));
+      input.value = '';
+      input.focus();
+
       renderSettings();
-      alert("Tâche quotidienne ajoutée !");
     }
 
-    async function deleteTask(taskId) {
-      if (!confirm("Supprimer cette tâche quotidienne ?")) return;
-      await sb.from('tasks').delete().eq('id', taskId);
-      tasks = tasks.filter(t => t.id !== taskId);
-      render();
+    async function deleteTemplateTask(templateId, templateName) {
+      if (!confirm(`Supprimer "${templateName}" du catalogue ?`)) return;
+      await sb.from('task_templates').delete().eq('id', templateId);
+      taskTemplates = taskTemplates.filter(t => t.id !== templateId);
       renderSettings();
+    }
+
+    // ==============================================================
+    // 2. AFFECTATION AUX ENFANTS / JOURS EN 1 CLIC (TOGGLE)
+    // ==============================================================
+
+    function renderDayAssignmentManager() {
+      const kidSel = document.getElementById('cfg-task-kid');
+      const daySel = document.getElementById('cfg-task-day');
+      const assignDiv = document.getElementById('cfg-assign-chips');
+      const titleDiv = document.getElementById('day-assign-title');
+
+      if (!kidSel || !daySel || !assignDiv) return;
+
+      const kidId = kidSel.value;
+      const day = daySel.value;
+      const kid = children.find(c => c.id === kidId);
+
+      if (titleDiv) {
+        titleDiv.innerText = `Tâches du ${day} pour ${kid ? kid.name : ''} (cliquez pour activer/désactiver) :`;
+      }
+
+      // Tâches déjà actives ce jour pour cet enfant
+      const assignedTaskNames = tasks
+        .filter(t => t.child_id === kidId && t.day_of_week === day && !t.is_bonus)
+        .map(t => t.task_name);
+
+      if (taskTemplates.length === 0) {
+        assignDiv.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche dans le catalogue. Ajoutez-en ci-dessus !</p>';
+        return;
+      }
+
+      assignDiv.innerHTML = taskTemplates.map(tmpl => {
+        const isAssigned = assignedTaskNames.includes(tmpl.name);
+        return `
+          <button type="button" class="catalog-chip ${isAssigned ? 'assigned' : ''}" onclick="toggleTaskAssignment('${tmpl.name.replace(/'/g, "\\'")}', ${isAssigned})">
+            <span>${isAssigned ? '✅' : '⚪'}</span>
+            <span>${tmpl.name}</span>
+          </button>
+        `;
+      }).join('');
+    }
+
+    async function toggleTaskAssignment(taskName, currentlyAssigned) {
+      const kidId = document.getElementById('cfg-task-kid').value;
+      const day = document.getElementById('cfg-task-day').value;
+
+      if (currentlyAssigned) {
+        // Supprime la tâche de ce jour
+        const existing = tasks.find(t => t.child_id === kidId && t.day_of_week === day && t.task_name === taskName && !t.is_bonus);
+        if (existing) {
+          await sb.from('tasks').delete().eq('id', existing.id);
+          tasks = tasks.filter(t => t.id !== existing.id);
+        }
+      } else {
+        // Ajoute la tâche pour ce jour
+        const newTask = {
+          family_id: currentFamily.id,
+          child_id: kidId,
+          task_name: taskName,
+          day_of_week: day,
+          status_completed: false
+        };
+        const { data, error } = await sb.from('tasks').insert([newTask]).select();
+        if (data && data[0]) tasks.push(data[0]);
+      }
+
+      render();
+      renderDayAssignmentManager();
     }
 
     async function addCustomBonus() {
@@ -1222,19 +1363,21 @@
     }
 
     function renderSettings() {
-      const taskDiv = document.getElementById('cfg-existing-tasks');
-      if (taskDiv) {
-        taskDiv.innerHTML = tasks.map(t => {
-          const kid = children.find(c => c.id === t.child_id);
-          return `
-            <div class="config-table-row">
-              <div><strong>${kid ? kid.name : '?'}</strong> (${t.day_of_week}) : <span>${t.task_name}</span></div>
-              <button type="button" class="btn-del" onclick="deleteTask('${t.id}')">✕</button>
-            </div>
-          `;
-        }).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche.</p>';
+      // 1. Liste du catalogue
+      const chipsDiv = document.getElementById('cfg-templates-chips');
+      if (chipsDiv) {
+        chipsDiv.innerHTML = taskTemplates.map(tmpl => `
+          <span class="catalog-tag-item">
+            ${tmpl.name}
+            <button type="button" onclick="deleteTemplateTask('${tmpl.id}', '${tmpl.name.replace(/'/g, "\\'")}')" style="border:none;background:none;color:#EF4444;cursor:pointer;font-weight:bold;margin-left:4px;">✕</button>
+          </span>
+        `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche dans le catalogue.</p>';
       }
 
+      // 2. Grille d'affectation
+      renderDayAssignmentManager();
+
+      // 3. Bonus
       const bonusDiv = document.getElementById('cfg-existing-bonuses');
       if (bonusDiv) {
         bonusDiv.innerHTML = bonusTemplates.map(b => `
@@ -1245,6 +1388,7 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun bonus.</p>';
       }
 
+      // 4. Attentions Duo
       const actDiv = document.getElementById('cfg-existing-actions');
       if (actDiv) {
         actDiv.innerHTML = duoActions.map(a => `
@@ -1255,6 +1399,7 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune attention configurée.</p>';
       }
 
+      // 5. Récompenses Duo
       const rewDiv = document.getElementById('cfg-existing-rewards');
       if (rewDiv) {
         rewDiv.innerHTML = duoRewards.map(r => `
@@ -1377,7 +1522,6 @@
       location.reload();
     }
 
-    // RESTAURATION INSTANTANÉE DEPUIS LE LOCALSTORAGE
     document.addEventListener('DOMContentLoaded', async () => {
       const savedTheme = localStorage.getItem('fratricide_theme') || 'ios';
       setTheme(savedTheme);
