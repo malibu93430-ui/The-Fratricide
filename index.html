@@ -223,8 +223,19 @@
     .pill-pts { background: rgba(0,0,0,0.05); padding: 3px 8px; border-radius: 8px; font-weight: 800; font-size: 0.85rem; }
     .final-box { margin-top: 8px; padding: 6px 8px; background: rgba(0,0,0,0.03); border-radius: 8px; font-size: 0.85rem; font-weight: 700; }
     
-    .task-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px dashed var(--border); }
+    .task-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); }
     .task-meta { display: flex; flex-direction: column; }
+    .day-separator {
+      margin-top: 14px;
+      margin-bottom: 6px;
+      padding: 4px 10px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--accent);
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      display: inline-block;
+    }
     .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
     .switch input { opacity: 0; width: 0; height: 0; }
     .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--switch-off); transition: .2s; border-radius: 34px; border: var(--border-width) solid var(--border); }
@@ -445,7 +456,7 @@
       <h2>👶 Enfants de la famille</h2>
       <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 18px;">Indiquez les prénoms de la fratrie :</p>
       <div id="setup-kids-list"></div>
-      <button type="button" onclick="addKidRow()" style="width:100%;padding:8px;border:2px dashed var(--border);background:none;margin-top:8px;cursor:pointer;font-weight:700;">➕ Ajouter un enfant</button>
+      <button type="button" onclick="addKidRow()" style="width:100%;padding:8px;border:2px dashed var(--border);background:none;margin-top:8px;cursor:font-weight:700;">➕ Ajouter un enfant</button>
       <button type="button" class="btn-submit" style="margin-top: 16px;" onclick="saveKids()">Lancer l'Arène 🚀</button>
     </div>
   </div>
@@ -1229,10 +1240,7 @@
       }
     }
 
-    // ==============================================================
-    // 1. CATALOGUE UNIQUE DES TÂCHES (CRÉATION UNE SEULE FOIS)
-    // ==============================================================
-
+    // CATALOGUE DES TÂCHES
     async function addTemplateTask() {
       const input = document.getElementById('cfg-template-name');
       const name = input.value.trim();
@@ -1258,16 +1266,21 @@
     }
 
     async function deleteTemplateTask(templateId, templateName) {
-      if (!confirm(`Supprimer "${templateName}" du catalogue ?`)) return;
+      if (!confirm(`Supprimer "${templateName}" du catalogue et de tous les plannings ?`)) return;
+
+      // Supprime du catalogue
       await sb.from('task_templates').delete().eq('id', templateId);
       taskTemplates = taskTemplates.filter(t => t.id !== templateId);
+
+      // Purge également cette tâche de tous les plannings enfants pour garantir la cohérence
+      await sb.from('tasks').delete().eq('family_id', currentFamily.id).eq('task_name', templateName);
+      tasks = tasks.filter(t => t.task_name !== templateName);
+
+      render();
       renderSettings();
     }
 
-    // ==============================================================
-    // 2. AFFECTATION AUX ENFANTS / JOURS EN 1 CLIC (TOGGLE)
-    // ==============================================================
-
+    // AFFECTATION AU PLANNING PAR ENFANT & PAR JOUR (SYNCHRONISATION RIGOUREUSE)
     function renderDayAssignmentManager() {
       const kidSel = document.getElementById('cfg-task-kid');
       const daySel = document.getElementById('cfg-task-day');
@@ -1284,10 +1297,10 @@
         titleDiv.innerText = `Tâches du ${day} pour ${kid ? kid.name : ''} (cliquez pour activer/désactiver) :`;
       }
 
-      // Tâches déjà actives ce jour pour cet enfant
+      // Noms des tâches assignées (insensible à la casse et sans espaces superflus)
       const assignedTaskNames = tasks
         .filter(t => t.child_id === kidId && t.day_of_week === day && !t.is_bonus)
-        .map(t => t.task_name);
+        .map(t => t.task_name.trim().toLowerCase());
 
       if (taskTemplates.length === 0) {
         assignDiv.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche dans le catalogue. Ajoutez-en ci-dessus !</p>';
@@ -1295,7 +1308,7 @@
       }
 
       assignDiv.innerHTML = taskTemplates.map(tmpl => {
-        const isAssigned = assignedTaskNames.includes(tmpl.name);
+        const isAssigned = assignedTaskNames.includes(tmpl.name.trim().toLowerCase());
         return `
           <button type="button" class="catalog-chip ${isAssigned ? 'assigned' : ''}" onclick="toggleTaskAssignment('${tmpl.name.replace(/'/g, "\\'")}', ${isAssigned})">
             <span>${isAssigned ? '✅' : '⚪'}</span>
@@ -1310,14 +1323,18 @@
       const day = document.getElementById('cfg-task-day').value;
 
       if (currentlyAssigned) {
-        // Supprime la tâche de ce jour
-        const existing = tasks.find(t => t.child_id === kidId && t.day_of_week === day && t.task_name === taskName && !t.is_bonus);
-        if (existing) {
-          await sb.from('tasks').delete().eq('id', existing.id);
-          tasks = tasks.filter(t => t.id !== existing.id);
-        }
+        // Supprime de Supabase toutes les occurrences correspondant à cet enfant, ce jour et ce nom
+        await sb.from('tasks')
+          .delete()
+          .eq('family_id', currentFamily.id)
+          .eq('child_id', kidId)
+          .eq('day_of_week', day)
+          .eq('task_name', taskName);
+
+        // Nettoie immédiatement le tableau local pour que l'enfant ne la voie plus du tout
+        tasks = tasks.filter(t => !(t.child_id === kidId && t.day_of_week === day && t.task_name.trim().toLowerCase() === taskName.trim().toLowerCase()));
       } else {
-        // Ajoute la tâche pour ce jour
+        // Ajoute la tâche proprement
         const newTask = {
           family_id: currentFamily.id,
           child_id: kidId,
@@ -1363,7 +1380,6 @@
     }
 
     function renderSettings() {
-      // 1. Liste du catalogue
       const chipsDiv = document.getElementById('cfg-templates-chips');
       if (chipsDiv) {
         chipsDiv.innerHTML = taskTemplates.map(tmpl => `
@@ -1374,10 +1390,8 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune tâche dans le catalogue.</p>';
       }
 
-      // 2. Grille d'affectation
       renderDayAssignmentManager();
 
-      // 3. Bonus
       const bonusDiv = document.getElementById('cfg-existing-bonuses');
       if (bonusDiv) {
         bonusDiv.innerHTML = bonusTemplates.map(b => `
@@ -1388,7 +1402,6 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucun bonus.</p>';
       }
 
-      // 4. Attentions Duo
       const actDiv = document.getElementById('cfg-existing-actions');
       if (actDiv) {
         actDiv.innerHTML = duoActions.map(a => `
@@ -1399,7 +1412,6 @@
         `).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;">Aucune attention configurée.</p>';
       }
 
-      // 5. Récompenses Duo
       const rewDiv = document.getElementById('cfg-existing-rewards');
       if (rewDiv) {
         rewDiv.innerHTML = duoRewards.map(r => `
@@ -1411,6 +1423,7 @@
       }
     }
 
+    // RENDU GLOBAL (DUEL & PLANNINGS TRIÉS DU LUNDI AU DIMANCHE)
     function render() {
       const stats = children.map(k => {
         const kTasks = tasks.filter(t => t.child_id === k.id);
@@ -1459,25 +1472,42 @@
         <p>• <strong>${s.name}</strong> : ${s.delta >= 0 ? '+' : ''}${s.delta.toFixed(2)} € sur la cagnotte.</p>
       `).join('');
 
+      // PLANNINGS DES ENFANTS
       children.forEach(k => {
         const div = document.getElementById(`t-list-${k.id}`);
         if (div) {
-          const kTasks = tasks.filter(t => t.child_id === k.id);
-          div.innerHTML = kTasks.map(t => {
-            const canEdit = (currentRole === 'admin' || currentRole === k.id);
-            return `
-              <div class="task-row">
-                <div class="task-meta">
-                  <strong>${t.day_of_week}</strong>
-                  <span style="font-size:0.85rem;color:var(--text-muted);">${t.task_name}</span>
-                </div>
-                <label class="switch">
-                  <input type="checkbox" ${t.status_completed ? 'checked' : ''} ${canEdit ? '' : 'disabled'} onchange="toggleTask('${t.id}', this.checked)">
-                  <span class="slider"></span>
-                </label>
-              </div>
-            `;
-          }).join('') || '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0;">Aucune tâche.</p>';
+          const kTasks = tasks.filter(t => t.child_id === k.id && !t.is_bonus);
+          
+          if (kTasks.length === 0) {
+            div.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:8px 0;">Aucune tâche configurée pour le moment.</p>';
+            return;
+          }
+
+          let htmlContent = '';
+          const canEdit = (currentRole === 'admin' || currentRole === k.id);
+
+          DAYS.forEach(day => {
+            const dayTasks = kTasks.filter(t => t.day_of_week === day);
+            if (dayTasks.length > 0) {
+              htmlContent += `<div class="day-separator">📅 ${day}</div>`;
+              dayTasks.forEach(t => {
+                htmlContent += `
+                  <div class="task-row">
+                    <div class="task-meta">
+                      <strong>${t.task_name}</strong>
+                      <span style="font-size:0.8rem;color:var(--text-muted);">0,5 pt</span>
+                    </div>
+                    <label class="switch">
+                      <input type="checkbox" ${t.status_completed ? 'checked' : ''} ${canEdit ? '' : 'disabled'} onchange="toggleTask('${t.id}', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                  </div>
+                `;
+              });
+            }
+          });
+
+          div.innerHTML = htmlContent;
         }
       });
 
